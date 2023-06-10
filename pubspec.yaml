@@ -20,22 +20,38 @@ version: 0.0.1+1
 environment:
   sdk: '>=3.0.3 <4.0.0'
 
+# Define version strings here
+isar_version: &isar_version ^3.1.0
+
 dependencies:
   flutter:
     sdk: flutter
 
-  intl: ^0.18.0                 # Localization
-  cupertino_icons: ^1.0.2       # CupertinoIcons class for iOS style icons.
-  collection: ^1.17.0           # More methods on collections
+  meta: ^1.9.0              # Meta class information (e.g. protected annotations)
+  async: ^2.11.0            # Extensions for async operations
+  collection: ^1.17.0       # More operations on collections
+  intl: ^0.18.0             # Localization
+  provider: ^6.0.0          # Provider/Notifier for application-wide state
+  cupertino_icons: ^1.0.2   # CupertinoIcons class for iOS style icons.
   permission_handler: ^10.3.0   # Check/request for permissions on Android/iOS
+  shared_preferences: ^2.1.0    # SharedPreferences / NSUserDefaults wrapper
+  pref: ^2.7.0                  # Preferences screen
+  path: ^1.8.3                  # Path manipulation (e.g. os.path.join like)
+  path_provider: ^2.0.15        # Paths for storage
   file_picker: ^5.3.2           # File/Folder picker
+  isar: *isar_version               # Local NoSQL DB
+  isar_flutter_libs: *isar_version  # contains Isar Core
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
 
-  # The lint set provided by the package is activated in the `analysis_options.yaml`
-  # file located at the root of your package.
+  # For generating isar schemas, run:
+  # flutter pub run build_runner build
+  isar_generator: *isar_version
+  build_runner: ^2.4.4
+
+  # Configure lints in `analysis_options.yaml`
   flutter_lints: ^2.0.0
 
 # For information on the generic Dart part of this file, see the
