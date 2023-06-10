@@ -1,9 +1,29 @@
 import 'package:flutter/material.dart';
+import 'package:pref/pref.dart';
+import 'package:provider/provider.dart';
 
-import 'home.dart';
+import 'providers/permissions.dart';
+import 'settings/settings.dart';
 
-void main() {
-  runApp(const MyApp());
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  final permissions = PermissionsNotifier();
+
+  final prefService = await PrefServiceShared.init(
+    prefix: "",
+    defaults: Pref.getDefaultValues(),
+  );
+
+  runApp(MultiProvider(
+    providers: [
+      ChangeNotifierProvider.value(value: permissions),
+    ],
+    child: PrefService(
+      service: prefService,
+      child: MyApp(),
+    ),
+  ));
 }
 
 class MyApp extends StatelessWidget {
@@ -13,14 +33,12 @@ class MyApp extends StatelessWidget {
 
   // This widget is the root of your application.
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: title,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-      ),
-      home: const MyHomePage(),
-    );
-  }
+  Widget build(BuildContext context) => MaterialApp(
+        title: title,
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+          useMaterial3: true,
+        ),
+        home: Settings(),
+      );
 }
