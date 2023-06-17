@@ -23,22 +23,21 @@ class _HomePageState extends State<HomePage> {
     final theme = Theme.of(context);
     return Consumer<ActiveTabsNotifier>(
         builder: (context, activeTabs, child) => DefaultTabController(
-              length: activeTabs.activeTabs.length,
+              length: activeTabs.tabs.length,
               animationDuration: Duration.zero,
               child: Scaffold(
                 appBar: AppBar(
                   backgroundColor: theme.colorScheme.inversePrimary,
                   flexibleSpace: SafeArea(
                     child: TabBar(tabs: [
-                      for (var tab in activeTabs.activeTabs)
+                      for (var tab in activeTabs.tabs)
                         Tab(icon: Icon(tab.iconDefault), text: tab.label)
                     ]),
                   ),
                 ),
                 body: TabBarView(
                   children: [
-                    for (var tab in activeTabs.activeTabs)
-                      _bodyForTab(context, tab)
+                    for (var tab in activeTabs.tabs) _bodyForTab(context, tab)
                   ],
                 ),
                 bottomSheet: PlayerWidget(),

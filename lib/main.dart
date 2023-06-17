@@ -28,7 +28,7 @@ Future<void> main() async {
   );
   debugPrint("Preferences: ${prefService.getKeys()}");
 
-  final tabs = ActiveTabsNotifier(prefService);
+  final tabs = ActiveTabsNotifier(prefService: prefService);
 
   final permissions = PermissionsNotifier();
   final rootFolder = RootFolderNotifier(
