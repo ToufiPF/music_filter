@@ -6,13 +6,20 @@ import 'package:pref/pref.dart';
 import 'active_tabs.dart';
 
 enum Pref {
-  /// Tracks which tabs are displayed in the nav bar
+  /// Tracks which tabs are displayed in the nav bar.
+  /// Contains a json encoded String
   activeTabs("active_tabs", null),
+
+  /// Tracks the directory to explore when searching for musics/presenting the folder view.
+  /// Holds a String, the path to the [Directory]
+  rootFolder("music_root_folder", null),
   ;
 
   /// Returns the default values for each preference
-  static Map<String, dynamic> getDefaultValues() =>
-      {for (var pref in Pref.values) pref.name: pref.defaultValue};
+  static Map<String, dynamic> getDefaultValues() => {
+        for (var pref in Pref.values)
+          if (pref.defaultValue != null) pref.name: pref.defaultValue
+      };
 
   const Pref(this.name, this._defaultValue);
 
@@ -30,13 +37,12 @@ enum Pref {
             'tabs': AvailableTab.values.map((e) => e.id).toList(),
             'enabled': List.generate(AvailableTab.values.length, (i) => true),
           }),
-        // ignore: unreachable_switch_case
         _ => _defaultValue,
       };
 }
 
-class Settings extends StatelessWidget {
-  const Settings({super.key});
+class SettingsPage extends StatelessWidget {
+  const SettingsPage({super.key});
 
   @override
   Widget build(BuildContext context) => Scaffold(

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../main.dart';
+import '../providers/root_folder.dart';
+import '../widget/file_view.dart';
 
 /// Home page for the app
 class HomePage extends StatefulWidget {
@@ -18,15 +21,15 @@ class _HomePageState extends State<HomePage> {
         appBar: AppBar(
           backgroundColor: theme.colorScheme.inversePrimary,
           title: Text(MyApp.title),
+          actions: [],
         ),
         body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              const Text(
-                'You have pushed the button this many times:',
-              ),
-            ],
+          child: Consumer<RootFolderNotifier>(
+            builder: (context, provider, child) => provider.rootFolder != null
+                ? FileView(root: provider.rootFolder!)
+                : ElevatedButton(
+                    onPressed: () => provider.pickFolder(null),
+                    child: Text("Chose a folder")),
           ),
         ));
   }

@@ -79,8 +79,6 @@ String _encodeToJson(List<(String, bool)> tabs) => jsonEncode({
 class PrefActiveTabs extends StatefulWidget {
   static const String tag = "PrefActiveTabs";
 
-  static final Set<AvailableTab> availableTabs = AvailableTab.values.toSet();
-
   const PrefActiveTabs({
     super.key,
     required this.pref,
@@ -167,7 +165,10 @@ class _PrefActiveTabsState extends State<PrefActiveTabs> {
       disabled: disabled,
       title: widget.title,
       subtitle: widget.subtitle ??
-          Text(activeTabs.where((e) => e.$2).map((e) => e.$1).join(", ")),
+          Text(activeTabs
+              .where((e) => e.$2)
+              .map((e) => AvailableTab.fromId(e.$1)?.label ?? e.$1)
+              .join(", ")),
       dialog: ReorderablePrefDialog(
         pref: widget.pref,
         title: widget.title,
@@ -191,7 +192,9 @@ class ReorderablePrefDialog extends PrefDialog {
     super.submit,
     super.cancel,
     super.actions = const [],
-// do not dismiss as soon as user changes something:
+// do not dismiss as soon as user changes something ;
+// don't store the children here, we'll build them in the dialog
+// from the cached (not yet saved) preferences
   }) : super(children: const [], dismissOnChange: false);
 
   final String pref;
@@ -207,6 +210,7 @@ class ReorderablePrefDialogState extends PrefDialogState {
   @override
   ReorderablePrefDialog get widget => super.widget as ReorderablePrefDialog;
 
+  /// Builds item dialog from the current preferences (could be cached)
   List<Widget> _buildDialogItems(BuildContext context) {
     final service = PrefService.of(context);
     final activeTabs = _decodeFromJson(service.get<String>(widget.pref)!);
@@ -225,8 +229,8 @@ class ReorderablePrefDialogState extends PrefDialogState {
         tileColor: isActive ? Colors.white60 : Colors.white30,
         leading: Icon(
           isActive ? tab.iconSelected : tab.iconDefault,
-          size: 40,
           color: isActive ? colorActive : colorDefault,
+          size: 40,
         ),
         trailing: tab.alwaysActive
             ? null
@@ -314,6 +318,7 @@ class ReorderablePrefDialogState extends PrefDialogState {
     );
   }
 
+  /// copied from [PrefDialogState]
   void _extendActions(List<Widget> actions) {
     if (widget.cancel != null && widget.cache) {
       actions.add(
