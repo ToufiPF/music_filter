@@ -10,11 +10,13 @@ class PlayerWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Column(
-        children: [
-          MediaButtonsWidget(),
-          PlayingMusicInfoWidget(),
-        ],
-      );
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            MediaButtonsWidget(),
+            PlayingMusicInfoWidget(),
+          ]);
 }
 
 class MediaButtonsWidget extends StatelessWidget {
@@ -24,20 +26,27 @@ class MediaButtonsWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final player = Provider.of<PlayerStateController>(context, listen: false);
 
-    return Row(children: [
-      IconButton(onPressed: player.previous, icon: Icon(Icons.skip_previous)),
-      StreamBuilder<bool>(
-          initialData: player.isPlaying,
-          stream: player.isPlayingStream,
-          builder: (context, snapshot) {
-            final isPlaying = snapshot.requireData;
-            return IconButton(
-              icon: Icon(isPlaying ? Icons.pause : Icons.play_arrow),
-              onPressed: isPlaying ? player.pause : player.play,
-            );
-          }),
-      IconButton(onPressed: player.next, icon: Icon(Icons.skip_next)),
-    ]);
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        IconButton(
+            onPressed: () => player.playerPosition.inSeconds >= 2
+                ? player.seekTo(Duration.zero)
+                : player.previous(),
+            icon: Icon(Icons.skip_previous)),
+        StreamBuilder<bool>(
+            initialData: player.isPlaying,
+            stream: player.isPlayingStream,
+            builder: (context, snapshot) {
+              final isPlaying = snapshot.requireData;
+              return IconButton(
+                icon: Icon(isPlaying ? Icons.pause : Icons.play_arrow),
+                onPressed: isPlaying ? player.pause : player.play,
+              );
+            }),
+        IconButton(onPressed: player.next, icon: Icon(Icons.skip_next)),
+      ],
+    );
   }
 }
 
@@ -57,9 +66,11 @@ class PlayingMusicInfoWidget extends StatelessWidget {
           final idx = snapshot.data;
           Music? music = idx != null ? queue.queue[idx] : null;
           return Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(music?.title ?? music?.filename ?? "N/A"),
-              Text(music?.displayArtist ?? "N/A"),
+              Text("${music?.displayArtist} - ${music?.album}"),
             ],
           );
         });

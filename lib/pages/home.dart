@@ -41,6 +41,7 @@ class _HomePageState extends State<HomePage> {
                       _bodyForTab(context, tab)
                   ],
                 ),
+                bottomSheet: PlayerWidget(),
               ),
             ));
   }
