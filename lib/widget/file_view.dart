@@ -24,6 +24,10 @@ class FileView extends StatefulWidget {
 class _FileViewState extends State<FileView> {
   static const tag = FileView.tag;
 
+  /// Actions that will popup when clicking on the "..." next to a file/folder item
+  static const filePopupActions = [MenuAction.addToPlaylist, MenuAction.delete];
+  static const dirPopupActions = [MenuAction.addToPlaylist, MenuAction.delete];
+
   late Directory current;
 
   /// Whether we can go up in the file hierarchy
@@ -99,9 +103,9 @@ class _FileViewState extends State<FileView> {
           onTap: () => setState(() => current = dir),
           trailing: PopupMenuButton<int>(
             itemBuilder: (context) => [
-              PopupMenuItem<int>(
-                  value: MenuAction.addToPlaylist.index,
-                  child: Text(MenuAction.addToPlaylist.text)),
+              for (var action in dirPopupActions)
+                PopupMenuItem<int>(
+                    value: action.index, child: Text(action.text)),
             ],
             child: Icon(Icons.more_vert, size: 32),
             onSelected: (index) =>
@@ -114,9 +118,9 @@ class _FileViewState extends State<FileView> {
           onTap: null,
           trailing: PopupMenuButton<int>(
             itemBuilder: (context) => [
-              PopupMenuItem<int>(
-                  value: MenuAction.addToPlaylist.index,
-                  child: Text(MenuAction.addToPlaylist.text)),
+              for (var action in filePopupActions)
+                PopupMenuItem<int>(
+                    value: action.index, child: Text(action.text)),
             ],
             child: Icon(Icons.more_vert, size: 32),
             onSelected: (index) =>
@@ -135,10 +139,12 @@ class _FileViewState extends State<FileView> {
       case MenuAction.addToPlaylist:
         final musics = await _fetchMusicsIn(entity, recursive: true);
         debugPrint("[$tag] Adding $musics to playlist");
-        playlist.appendToQueue(musics);
+        playlist.appendAll(musics);
         break;
       case MenuAction.delete:
         break;
+      default:
+        throw StateError("Clicked on unsupported menu item $action");
     }
   }
 
@@ -160,7 +166,7 @@ class _FileViewState extends State<FileView> {
         }
       }
     } else {
-      debugPrint("");
+      debugPrint("[$tag]_fetchMusicsIn on $e: Skipped.");
     }
 
     return musics;

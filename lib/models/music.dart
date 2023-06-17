@@ -19,6 +19,10 @@ class Music {
   /// Basename of the file, computed from [path]
   String get filename => p.basenameWithoutExtension(path);
 
+  /// String for displaying the music's artist(s)
+  String get displayArtist =>
+      artists.isNotEmpty ? artists.join(", ") : albumArtist ?? "Unknown artist";
+
   @override
   String toString() => "Music($path)";
 }

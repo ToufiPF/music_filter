@@ -4,66 +4,76 @@ import 'package:just_audio_background/just_audio_background.dart';
 
 import '../models/music.dart';
 
+/// Controller/Observer of the currently playing queue
 mixin PlayerQueueNotifier on ChangeNotifier {
-  List<Music> get currentQueue;
+  /// View on the current queue (unmodifiable)
+  List<Music> get queue;
 
-  void appendToQueue(List<Music> musics);
+  /// Append all musics to the end of the queue
+  Future<void> appendAll(List<Music> musics);
 
-  void insertInQueue(int index, Music music);
+  /// Insert a music to the given index
+  Future<void> insert(int index, Music music);
 
-  void removeFromQueue(int index);
+  /// Remove the item at the given index from the queue
+  Future<void> removeAt(int index);
 
-  void clearQueue();
+  /// Empties the queue
+  Future<void> clear();
 }
 
 class JustAudioQueueNotifier extends ChangeNotifier with PlayerQueueNotifier {
   final ConcatenatingAudioSource _source =
       ConcatenatingAudioSource(children: []);
 
+  /// TODO: use Isar id instead
+  var idxCounter = 0;
   final List<Music> _currentQueue = [];
 
   AudioSource get audioSource => _source;
 
   @override
-  List<Music> get currentQueue => _currentQueue.toList(growable: false);
+  List<Music> get queue => _currentQueue.toList(growable: false);
 
   @override
-  void appendToQueue(List<Music> musics) {
-    _source
-        .addAll(musics.map((e) => _musicToSource(e)).toList(growable: false));
+  Future<void> appendAll(List<Music> musics) async {
     _currentQueue.addAll(musics);
+    await _source
+        .addAll(musics.map((e) => _musicToSource(e)).toList(growable: false));
 
     notifyListeners();
   }
 
   @override
-  void insertInQueue(int index, Music music) {
-    _source.add(_musicToSource(music));
+  Future<void> insert(int index, Music music) async {
     _currentQueue.insert(index, music);
+    await _source.add(_musicToSource(music));
     notifyListeners();
   }
 
   @override
-  void removeFromQueue(int index) {
-    _source.removeAt(index);
+  Future<void> removeAt(int index) async {
     _currentQueue.removeAt(index);
+    await _source.removeAt(index);
     notifyListeners();
   }
 
   @override
-  void clearQueue() {
-    _source.clear();
+  Future<void> clear() async {
     _currentQueue.clear();
+    await _source.clear();
     notifyListeners();
   }
 
-  AudioSource _musicToSource(Music music) => AudioSource.file(music.path,
-      tag: MediaItem(
-        id: music.path,
-        title: music.title ?? music.filename,
-        album: music.album,
-        artist: music.artists.isNotEmpty
-            ? music.artists.join(", ")
-            : music.albumArtist,
-      ));
+  AudioSource _musicToSource(Music music) {
+    final id = idxCounter.toString();
+    idxCounter += 1;
+    return AudioSource.file(music.path,
+        tag: MediaItem(
+          id: id,
+          title: music.title ?? music.filename,
+          album: music.album,
+          artist: music.displayArtist,
+        ));
+  }
 }

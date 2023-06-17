@@ -45,6 +45,7 @@ Future<void> main() async {
       ChangeNotifierProvider.value(value: permissions),
       ChangeNotifierProvider.value(value: rootFolder),
       ChangeNotifierProvider.value(value: playlist),
+      Provider.value(value: player),
     ],
     child: PrefService(
       service: prefService,
