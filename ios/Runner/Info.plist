@@ -53,5 +53,11 @@
     <string>Music!</string>
     <key>kTCCServiceMediaLibrary</key>
     <string>media</string>
+
+    <!-- Playing audio in background -->
+    <key>UIBackgroundModes</key>
+    <array>
+        <string>audio</string>
+    </array>
 </dict>
 </plist>

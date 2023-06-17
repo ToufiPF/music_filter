@@ -41,7 +41,9 @@ dependencies:
   file_picker: ^5.3.2           # File/Folder picker
   isar: *isar_version               # Local NoSQL DB
   isar_flutter_libs: *isar_version  # contains Isar Core
-  flutter_media_metadata: ^1.0.0+1  # Fetch audio tags from File
+  flutter_media_metadata: ^1.0.0+1        # Fetch audio tags from File
+  just_audio: ^0.9.30                     # Audio player
+  just_audio_background: ^0.0.1-beta.10   # Audio player in background
 
 dev_dependencies:
   flutter_test:
