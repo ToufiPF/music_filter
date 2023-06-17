@@ -1,24 +1,67 @@
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../models/music.dart';
 import '../providers/player.dart';
 import '../providers/playlist.dart';
 
-class PlayerWidget extends StatefulWidget {
-  PlayerWidget() : super(key: PlayerWidgetState.key);
+class PlayerWidget extends StatelessWidget {
+  const PlayerWidget({super.key});
 
   @override
-  State<PlayerWidget> createState() => PlayerWidgetState();
+  Widget build(BuildContext context) => Column(
+        children: [
+          MediaButtonsWidget(),
+          PlayingMusicInfoWidget(),
+        ],
+      );
 }
 
-class PlayerWidgetState extends State<PlayerWidget> {
-  static final key = GlobalKey<PlayerWidgetState>();
-
-  late final PlayerStateController player;
-  late final PlayerQueueNotifier playlist;
+class MediaButtonsWidget extends StatelessWidget {
+  const MediaButtonsWidget({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // TODO: implement build
-    throw UnimplementedError();
+    final player = Provider.of<PlayerStateController>(context, listen: false);
+
+    return Row(children: [
+      IconButton(onPressed: player.previous, icon: Icon(Icons.skip_previous)),
+      StreamBuilder<bool>(
+          initialData: player.isPlaying,
+          stream: player.isPlayingStream,
+          builder: (context, snapshot) {
+            final isPlaying = snapshot.requireData;
+            return IconButton(
+              icon: Icon(isPlaying ? Icons.pause : Icons.play_arrow),
+              onPressed: isPlaying ? player.pause : player.play,
+            );
+          }),
+      IconButton(onPressed: player.next, icon: Icon(Icons.skip_next)),
+    ]);
+  }
+}
+
+class PlayingMusicInfoWidget extends StatelessWidget {
+  const PlayingMusicInfoWidget({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final player = Provider.of<PlayerStateController>(context, listen: false);
+
+    return StreamBuilder<int?>(
+        stream: player.indexInPlaylistStream,
+        builder: (context, snapshot) {
+          final queue =
+              Provider.of<PlayerQueueNotifier>(context, listen: false);
+
+          final idx = snapshot.data;
+          Music? music = idx != null ? queue.queue[idx] : null;
+          return Column(
+            children: [
+              Text(music?.title ?? music?.filename ?? "N/A"),
+              Text(music?.displayArtist ?? "N/A"),
+            ],
+          );
+        });
   }
 }
