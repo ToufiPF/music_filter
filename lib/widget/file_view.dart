@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_media_metadata/flutter_media_metadata.dart';
+import 'package:path/path.dart' as p;
 import 'package:provider/provider.dart';
 
 import '../models/music.dart';
@@ -60,7 +61,7 @@ class _FileViewState extends State<FileView> {
             ListTile(
               title: Text(current.path),
               leading: IconButton(
-                icon: Icon(Icons.folder),
+                icon: Icon(Icons.drive_folder_upload),
                 onPressed: canGoUp ? () => goUp() : null,
               ),
             ),
@@ -93,7 +94,7 @@ class _FileViewState extends State<FileView> {
 
     final children = <Widget>[];
     children.addAll(directories.map((dir) => ListTile(
-          title: Text(dir.path.split('/').last),
+          title: Text(p.basename(dir.path)),
           leading: Icon(Icons.folder_outlined),
           onTap: () => setState(() => current = dir),
           trailing: PopupMenuButton<int>(
@@ -109,7 +110,7 @@ class _FileViewState extends State<FileView> {
         )));
 
     children.addAll(files.map((e) => ListTile(
-          title: Text(e.path.split('/').last),
+          title: Text(p.basename(e.path)),
           onTap: null,
           trailing: PopupMenuButton<int>(
             itemBuilder: (context) => [
@@ -128,13 +129,13 @@ class _FileViewState extends State<FileView> {
 
   Future<void> _onPopupMenuAction(
       BuildContext context, MenuAction action, FileSystemEntity entity) async {
-    final playlist = Provider.of<PlaylistNotifier>(context, listen: false);
+    final playlist = Provider.of<PlayerQueueNotifier>(context, listen: false);
 
     switch (action) {
       case MenuAction.addToPlaylist:
         final musics = await _fetchMusicsIn(entity, recursive: true);
         debugPrint("[$tag] Adding $musics to playlist");
-        playlist.appendAll(musics);
+        playlist.appendToQueue(musics);
         break;
       case MenuAction.delete:
         break;

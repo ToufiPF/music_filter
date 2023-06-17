@@ -7,6 +7,7 @@ import '../providers/root_folder.dart';
 import '../settings/active_tabs.dart';
 import '../settings/settings.dart';
 import '../widget/file_view.dart';
+import '../widget/queue_view.dart';
 import 'app_bar.dart';
 import 'nav_bar.dart';
 
@@ -40,7 +41,7 @@ class _HomePageState extends State<HomePage> {
                           onPressed: () => rootFolder.pickFolder(null),
                           child: Text("Chose a folder"))
                       : switch (activeTabs.selected) {
-                          AvailableTab.queue => Text("Queue view"),
+                          AvailableTab.queue => QueueView(),
                           AvailableTab.folder =>
                             FileView(root: rootFolder.rootFolder!),
                           AvailableTab.settings => SettingsPage(),

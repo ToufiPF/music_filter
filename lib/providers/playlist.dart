@@ -1,62 +1,69 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:just_audio_background/just_audio_background.dart';
 
 import '../models/music.dart';
 
-class PlaylistNotifier extends ChangeNotifier {
-  final List<Music> _queue = [];
+mixin PlayerQueueNotifier on ChangeNotifier {
+  List<Music> get currentQueue;
 
-  List<Music> get currentQueue => _queue.toList(growable: false);
+  void appendToQueue(List<Music> musics);
 
-  AudioSource get audioSource => ConcatenatingAudioSource(
-          useLazyPreparation: true,
-          shuffleOrder: DefaultShuffleOrder(),
-          children: [
-            for (var (idx, music) in currentQueue.indexed)
-              AudioSource.file(music.path,
-                  tag: MediaItem(
-                      id: idx.toString(),
-                      title: music.title ?? music.path.split('/').last))
-          ]);
+  void insertInQueue(int index, Music music);
 
-  void clear() {
-    _queue.clear();
-    notifyListeners();
-  }
+  void removeFromQueue(int index);
 
-  void appendAll(List<Music> others) {
-    _queue.addAll(others);
-    notifyListeners();
-  }
-
-  void insert(int index, Music other) {
-    _queue.insert(index, other);
-    notifyListeners();
-  }
+  void clearQueue();
 }
 
-class CurrentMusicNotifier extends ChangeNotifier {
-  final PlaylistNotifier playlist;
+class JustAudioQueueNotifier extends ChangeNotifier with PlayerQueueNotifier {
+  final ConcatenatingAudioSource _source =
+      ConcatenatingAudioSource(children: []);
 
-  CurrentMusicNotifier(this.playlist) {
-    playlist.addListener(_onPlaylistUpdated);
+  final List<Music> _currentQueue = [];
+
+  AudioSource get audioSource => _source;
+
+  @override
+  List<Music> get currentQueue => _currentQueue.toList(growable: false);
+
+  @override
+  void appendToQueue(List<Music> musics) {
+    _source
+        .addAll(musics.map((e) => _musicToSource(e)).toList(growable: false));
+    _currentQueue.addAll(musics);
+
+    notifyListeners();
   }
 
   @override
-  void dispose() {
-    super.dispose();
-    playlist.removeListener(_onPlaylistUpdated);
+  void insertInQueue(int index, Music music) {
+    _source.add(_musicToSource(music));
+    _currentQueue.insert(index, music);
+    notifyListeners();
   }
 
-  Music? _currentMusic;
-
-  Music? get currentMusic => _currentMusic;
-
-  void _onPlaylistUpdated() {
-    if (playlist.currentQueue.isEmpty) {
-      _currentMusic = null;
-      notifyListeners();
-    }
+  @override
+  void removeFromQueue(int index) {
+    _source.removeAt(index);
+    _currentQueue.removeAt(index);
+    notifyListeners();
   }
+
+  @override
+  void clearQueue() {
+    _source.clear();
+    _currentQueue.clear();
+    notifyListeners();
+  }
+
+  AudioSource _musicToSource(Music music) => AudioSource.file(music.path,
+      tag: MediaItem(
+        id: music.path,
+        title: music.title ?? music.filename,
+        album: music.album,
+        artist: music.artists.isNotEmpty
+            ? music.artists.join(", ")
+            : music.albumArtist,
+      ));
 }

@@ -3,6 +3,7 @@ import 'package:just_audio_background/just_audio_background.dart';
 import 'package:pref/pref.dart';
 import 'package:provider/provider.dart';
 
+import '../providers/player.dart';
 import 'pages/home.dart';
 import 'providers/active_tabs.dart';
 import 'providers/permissions.dart';
@@ -25,23 +26,25 @@ Future<void> main() async {
     prefix: "",
     defaults: Pref.getDefaultValues(),
   );
-
   debugPrint("Preferences: ${prefService.getKeys()}");
+
+  final tabs = ActiveTabsNotifier(prefService);
 
   final permissions = PermissionsNotifier();
   final rootFolder = RootFolderNotifier(
     prefService: prefService,
     prefName: Pref.rootFolder.name,
   );
-  final playlist = PlaylistNotifier();
-  final tabs = ActiveTabsNotifier(prefService);
+  final PlayerQueueNotifier playlist = JustAudioQueueNotifier();
+  final PlayerStateController player = JustAudioPlayerController();
+  player.attachPlaylistController(playlist);
 
   runApp(MultiProvider(
     providers: [
+      ChangeNotifierProvider.value(value: tabs),
       ChangeNotifierProvider.value(value: permissions),
       ChangeNotifierProvider.value(value: rootFolder),
       ChangeNotifierProvider.value(value: playlist),
-      ChangeNotifierProvider.value(value: tabs),
     ],
     child: PrefService(
       service: prefService,
