@@ -3,11 +3,11 @@ import 'package:pref/pref.dart';
 import 'package:provider/provider.dart';
 
 import 'pages/home.dart';
+import 'providers/active_tabs.dart';
 import 'providers/permissions.dart';
 import 'providers/playlist.dart';
 import 'providers/root_folder.dart';
 import 'settings/settings.dart';
-import 'widget/folder_authorization_widget.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -25,12 +25,14 @@ Future<void> main() async {
     prefName: Pref.rootFolder.name,
   );
   final playlist = PlaylistNotifier();
+  final tabs = ActiveTabsNotifier(prefService);
 
   runApp(MultiProvider(
     providers: [
       ChangeNotifierProvider.value(value: permissions),
       ChangeNotifierProvider.value(value: rootFolder),
       ChangeNotifierProvider.value(value: playlist),
+      ChangeNotifierProvider.value(value: tabs),
     ],
     child: PrefService(
       service: prefService,
@@ -55,7 +57,6 @@ class MyApp extends StatelessWidget {
           ),
           initialRoute: '/home',
           routes: {
-            '/initial': _initialPage,
             '/home': _homePage,
             '/settings': _settingsPage,
             '/licenses': (_) => LicensePage(
@@ -65,15 +66,6 @@ class MyApp extends StatelessWidget {
                   applicationLegalese: null,
                 ),
           });
-
-  Widget _initialPage(BuildContext context) =>
-      Consumer<RootFolderNotifier>(builder: (context, provider, child) {
-        if (provider.rootFolder != null) {
-          return _homePage(context);
-        } else {
-          return Center(child: FolderAuthorizationWidget());
-        }
-      });
 
   Widget _homePage(BuildContext context) => HomePage();
 

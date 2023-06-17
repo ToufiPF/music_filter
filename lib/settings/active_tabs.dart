@@ -10,6 +10,7 @@ enum AvailableTab {
   queue(
     id: "queue",
     label: "Current queue",
+    appBarTitle: "Current queue",
     iconDefault: Icons.queue_music_outlined,
     iconSelected: Icons.queue_music,
     alwaysActive: false,
@@ -17,6 +18,7 @@ enum AvailableTab {
   folder(
     id: "folder",
     label: "Folder",
+    appBarTitle: "Folder view",
     iconDefault: Icons.folder_outlined,
     iconSelected: Icons.folder,
     alwaysActive: false,
@@ -24,6 +26,7 @@ enum AvailableTab {
   settings(
     id: "settings",
     label: "Settings",
+    appBarTitle: "Settings",
     iconDefault: Icons.settings_outlined,
     iconSelected: Icons.settings,
     alwaysActive: true,
@@ -42,6 +45,7 @@ enum AvailableTab {
   const AvailableTab({
     required this.id,
     required this.label,
+    required this.appBarTitle,
     required this.iconDefault,
     required this.iconSelected,
     required this.alwaysActive,
@@ -53,6 +57,9 @@ enum AvailableTab {
   /// Display name of the tab
   final String label;
 
+  /// Title to display in appBar
+  final String? appBarTitle;
+
   /// Icon to display when tab is not selected
   final IconData iconDefault;
 
@@ -61,6 +68,14 @@ enum AvailableTab {
 
   /// Whether the tab can be hidden
   final bool alwaysActive;
+}
+
+List<AvailableTab> decodeAvailableTabs(String jsonStr) {
+  final List<(String, bool)> active = _decodeFromJson(jsonStr);
+  return active
+      .where((e) => e.$2)
+      .map((e) => AvailableTab.fromId(e.$1)!)
+      .toList(growable: false);
 }
 
 List<(String, bool)> _decodeFromJson(String jsonStr) {
