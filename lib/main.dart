@@ -3,10 +3,11 @@ import 'package:just_audio_background/just_audio_background.dart';
 import 'package:pref/pref.dart';
 import 'package:provider/provider.dart';
 
-import '../providers/player.dart';
 import 'pages/home.dart';
 import 'providers/active_tabs.dart';
+import 'providers/folders.dart';
 import 'providers/permissions.dart';
+import 'providers/player.dart';
 import 'providers/playlist.dart';
 import 'providers/root_folder.dart';
 import 'settings/settings.dart';
@@ -28,8 +29,6 @@ Future<void> main() async {
   );
   debugPrint("Preferences: ${prefService.getKeys()}");
 
-  final tabs = ActiveTabsNotifier(prefService: prefService);
-
   final permissions = PermissionsNotifier();
   final rootFolder = RootFolderNotifier(
     prefService: prefService,
@@ -41,7 +40,12 @@ Future<void> main() async {
 
   runApp(MultiProvider(
     providers: [
-      ChangeNotifierProvider.value(value: tabs),
+      ChangeNotifierProvider(
+          create: (_) => ActiveTabsNotifier(prefService: prefService)),
+      ChangeNotifierProvider(
+          create: (_) => ShowHiddenFilesNotifier(prefService: prefService)),
+      ChangeNotifierProvider(
+          create: (_) => ShowEmptyFoldersNotifier(prefService: prefService)),
       ChangeNotifierProvider.value(value: permissions),
       ChangeNotifierProvider.value(value: rootFolder),
       ChangeNotifierProvider.value(value: playlist),
@@ -68,6 +72,7 @@ class MyApp extends StatelessWidget {
             colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
             useMaterial3: true,
           ),
+          debugShowCheckedModeBanner: false,
           initialRoute: '/home',
           routes: {
             '/home': _homePage,

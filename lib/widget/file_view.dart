@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:async/async.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_media_metadata/flutter_media_metadata.dart';
@@ -7,6 +8,7 @@ import 'package:path/path.dart' as p;
 import 'package:provider/provider.dart';
 
 import '../models/music.dart';
+import '../providers/folders.dart';
 import '../providers/playlist.dart';
 import 'context_menu.dart';
 
@@ -71,47 +73,63 @@ class _FileViewState extends State<FileView> {
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(24, 0, 0, 0),
-              child: FutureBuilder<List<Widget>>(
-                  future: _loadChildren(context),
-                  builder: (context, snapshot) {
-                    var children = snapshot.data;
-                    if (children == null) {
-                      return CircularProgressIndicator();
-                    } else if (children.isEmpty) {
-                      return Text("Empty");
-                    } else {
-                      return ListView(
-                        shrinkWrap: true,
-                        children: children,
-                      );
-                    }
-                  }),
+              child: Consumer2<ShowHiddenFilesNotifier,
+                  ShowEmptyFoldersNotifier>(
+                builder: (context, hidden, empty, child) =>
+                    FutureBuilder<List<Widget>>(
+                        future: _loadChildren(context,
+                            showEmpty: empty.show, showHidden: hidden.show),
+                        builder: (context, snapshot) {
+                          var children = snapshot.data;
+                          if (children == null) {
+                            return CircularProgressIndicator();
+                          } else if (children.isEmpty) {
+                            return Text("Empty");
+                          } else {
+                            return ListView(
+                              shrinkWrap: true,
+                              children: children,
+                            );
+                          }
+                        }),
+              ),
             ),
           ],
         ),
       );
 
-  Future<List<Widget>> _loadChildren(BuildContext context) async {
-    final entries = await current.list().toList();
+  Future<List<Widget>> _loadChildren(BuildContext context,
+      {required bool showHidden, required bool showEmpty}) async {
+    // skip hidden files ?
+    final entries = await current
+        .list()
+        .where((e) => showHidden || !p.basename(e.path).startsWith('.'))
+        .toList();
     final files = entries.whereType<File>().sortedBy((e) => e.path);
     final directories = entries.whereType<Directory>().sortedBy((e) => e.path);
 
     final children = <Widget>[];
-    children.addAll(directories.map((dir) => ListTile(
-          title: Text(p.basename(dir.path)),
-          leading: Icon(Icons.folder_outlined),
-          onTap: () => setState(() => current = dir),
-          trailing: PopupMenuButton<int>(
-            itemBuilder: (context) => [
-              for (var action in dirPopupActions)
-                PopupMenuItem<int>(
-                    value: action.index, child: Text(action.text)),
-            ],
-            child: Icon(Icons.more_vert, size: 32),
-            onSelected: (index) =>
-                _onPopupMenuAction(context, MenuAction.values[index], dir),
-          ),
-        )));
+    for (var dir in directories) {
+      // skip empty folders ?
+      if (!showEmpty && (await dir.list().firstOrNull) == null) {
+        continue;
+      }
+
+      children.add(ListTile(
+        title: Text(p.basename(dir.path)),
+        leading: Icon(Icons.folder_outlined),
+        onTap: () => setState(() => current = dir),
+        trailing: PopupMenuButton<int>(
+          itemBuilder: (context) => [
+            for (var action in dirPopupActions)
+              PopupMenuItem<int>(value: action.index, child: Text(action.text)),
+          ],
+          child: Icon(Icons.more_vert, size: 32),
+          onSelected: (index) =>
+              _onPopupMenuAction(context, MenuAction.values[index], dir),
+        ),
+      ));
+    }
 
     children.addAll(files.map((e) => ListTile(
           title: Text(p.basename(e.path)),

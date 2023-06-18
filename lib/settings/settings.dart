@@ -7,12 +7,20 @@ import 'active_tabs.dart';
 
 enum Pref {
   /// Tracks which tabs are displayed in the nav bar.
-  /// Contains a json encoded String
+  /// Contains a json encoded String.
   activeTabs("active_tabs", null),
 
   /// Tracks the directory to explore when searching for musics/presenting the folder view.
   /// Holds a String, the path to the [Directory]
   rootFolder("music_root_folder", null),
+
+  /// Whether to show hidden files in the FileView widget.
+  /// Holds a bool.
+  showHiddenFiles("show_hidden_folders", false),
+
+  /// Whether to show empty folders in the FileView widget
+  /// Holds a bool.
+  showEmptyFolders("show_empty_folders", false),
   ;
 
   /// Returns the default values for each preference
@@ -53,6 +61,14 @@ class SettingsPage extends StatelessWidget {
             title: Text("Active tabs"),
             submit: Text("Ok"),
             cancel: Text("Cancel"),
+          ),
+          PrefSwitch(
+            pref: Pref.showEmptyFolders.name,
+            title: Text("Show empty folders"),
+          ),
+          PrefSwitch(
+            pref: Pref.showHiddenFiles.name,
+            title: Text("Show hidden files"),
           ),
         ],
       );
