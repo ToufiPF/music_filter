@@ -27,21 +27,22 @@ class QueueView extends StatelessWidget {
                         stream: player.indexInPlaylistStream
                             .map((currentIdx) => currentIdx == musicIdx),
                         builder: (context, snapshot) {
-                          final isCurrentlyPlaying = snapshot.requireData;
+                          final isSongPlaying = snapshot.requireData;
                           return ListTile(
+                            selected: isSongPlaying,
                             title: Text(music.title ?? music.filename),
                             subtitle: Text(music.displayArtist),
-                            leading: Icon(isCurrentlyPlaying
+                            leading: Icon(isSongPlaying
                                 ? Icons.play_arrow
                                 : Icons.play_arrow_outlined),
                             trailing: PopupMenuButton<int>(
+                              child: Icon(Icons.more_vert, size: 32),
                               itemBuilder: (context) => [
                                 for (var action in popupActions)
                                   PopupMenuItem<int>(
                                       value: action.index,
                                       child: Text(action.text)),
                               ],
-                              child: Icon(Icons.more_vert, size: 32),
                               onSelected: (selectedAction) =>
                                   _onPopupMenuAction(
                                 context,
@@ -51,15 +52,24 @@ class QueueView extends StatelessWidget {
                                 musicIdx,
                               ),
                             ),
-                            onTap: isCurrentlyPlaying
-                                ? null
-                                : () => player.play(index: musicIdx),
+                            onTap: () {
+                              if (isSongPlaying && player.isPlaying) {
+                                return;
+                              }
+
+                              player.play(index: musicIdx);
+                            },
                           );
                         });
                   }));
 
-  Future<void> _onPopupMenuAction(BuildContext context, PlayerQueueNotifier queue,
-      PlayerStateController player, MenuAction action, int musicIdx) async {
+  Future<void> _onPopupMenuAction(
+    BuildContext context,
+    PlayerQueueNotifier queue,
+    PlayerStateController player,
+    MenuAction action,
+    int musicIdx,
+  ) async {
     switch (action) {
       case MenuAction.removeFromPlaylist:
         queue.removeAt(musicIdx);
