@@ -75,7 +75,7 @@ class QueueView extends StatelessWidget {
         queue.removeAt(musicIdx);
         break;
       default:
-        throw StateError("Clicked on unsupported menu item $action");
+        throw UnsupportedError("Clicked on unsupported menu item $action");
     }
   }
 }
