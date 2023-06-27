@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../misc.dart';
 import '../models/music.dart';
+import '../models/store.dart';
 import '../providers/player.dart';
 import '../providers/playlist.dart';
 
@@ -21,12 +22,7 @@ class PlayerWidget extends StatelessWidget {
             Row(
               children: [
                 Expanded(child: MediaButtonsWidget(iconSize: mediaIconsSize)),
-                IconButton(
-                    onPressed: () {},
-                    icon: Icon(Icons.save, size: actionIconsSize)),
-                IconButton(
-                    onPressed: () {},
-                    icon: Icon(Icons.delete_forever, size: actionIconsSize)),
+                StoreButtonsWidget(iconSize: actionIconsSize),
               ],
             ),
             PlayingMusicInfoWidget(),
@@ -63,6 +59,45 @@ class MediaButtonsWidget extends StatelessWidget {
         IconButton(
             onPressed: player.next,
             icon: Icon(Icons.skip_next, size: iconSize)),
+      ],
+    );
+  }
+}
+
+class StoreButtonsWidget extends StatelessWidget {
+  const StoreButtonsWidget({super.key, required this.iconSize});
+
+  final double iconSize;
+
+  @override
+  Widget build(BuildContext context) {
+    final store = Provider.of<Store>(context, listen: false);
+    final player = Provider.of<PlayerStateController>(context, listen: false);
+    final queue = Provider.of<PlayerQueueNotifier>(context, listen: false);
+
+    Music? currentMusic() {
+      final musicIdx = player.indexInPlaylist;
+      return musicIdx != null ? queue.queue[musicIdx] : null;
+    }
+
+    return Row(
+      children: [
+        IconButton(
+            onPressed: () {
+              final music = currentMusic();
+              if (music != null) {
+                store.markAs(music, KeepState.kept);
+              }
+            },
+            icon: Icon(Icons.save, size: iconSize)),
+        IconButton(
+            onPressed: () {
+              final music = currentMusic();
+              if (music != null) {
+                store.markAs(music, KeepState.deleted);
+              }
+            },
+            icon: Icon(Icons.delete_forever, size: iconSize)),
       ],
     );
   }

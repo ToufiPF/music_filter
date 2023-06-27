@@ -1,8 +1,15 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:isar/isar.dart';
 import 'package:just_audio_background/just_audio_background.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:pref/pref.dart';
 import 'package:provider/provider.dart';
 
+import 'models/isar_store.dart';
+import 'models/music.dart';
+import 'models/store.dart';
 import 'pages/home.dart';
 import 'providers/active_tabs.dart';
 import 'providers/folders.dart';
@@ -38,6 +45,13 @@ Future<void> main() async {
   final PlayerStateController player = JustAudioPlayerController();
   player.attachPlaylistController(playlist);
 
+  final docDir = await getApplicationDocumentsDirectory();
+  final isarDir = Directory('${docDir.path}/isar_db');
+  await isarDir.create(recursive: true);
+
+  final isar = await Isar.open([MusicSchema], directory: isarDir.path);
+  final Store store = IsarStore(isar.musics);
+
   runApp(MultiProvider(
     providers: [
       ChangeNotifierProvider(
@@ -50,6 +64,7 @@ Future<void> main() async {
       ChangeNotifierProvider.value(value: rootFolder),
       ChangeNotifierProvider.value(value: playlist),
       Provider.value(value: player),
+      Provider.value(value: store),
     ],
     child: PrefService(
       service: prefService,
