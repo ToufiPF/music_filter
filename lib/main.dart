@@ -37,6 +37,8 @@ Future<void> main() async {
   debugPrint("Preferences: ${prefService.getKeys()}");
 
   final permissions = PermissionsNotifier();
+  WidgetsBinding.instance.addObserver(permissions);
+
   final rootFolder = RootFolderNotifier(
     prefService: prefService,
     prefName: Pref.rootFolder.name,
@@ -79,7 +81,6 @@ class MyApp extends StatelessWidget {
 
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) => MaterialApp(
           title: title,
@@ -88,17 +89,39 @@ class MyApp extends StatelessWidget {
             useMaterial3: true,
           ),
           debugShowCheckedModeBanner: false,
-          initialRoute: '/home',
+          initialRoute: '/initial',
           routes: {
+            '/initial': _initialPage,
             '/home': _homePage,
             '/settings': _settingsPage,
             '/licenses': (_) => LicensePage(
-                  applicationName: MyApp.title,
-                  applicationVersion: MyApp.version,
+                  applicationName: title,
+                  applicationVersion: version,
                   applicationIcon: null,
                   applicationLegalese: null,
                 ),
           });
+
+  Widget _initialPage(BuildContext context) {
+    const required = [
+      // PermissionGroup.storage,
+      PermissionGroup.media,
+    ];
+
+    return Consumer<PermissionsNotifier>(
+        builder: (context, perm, child) => perm
+                .getStatuses(required)
+                .every((e) => e == PermissionStatus.granted)
+            ? _homePage(context)
+            : Scaffold(
+                body: Center(
+                  child: ElevatedButton(
+                    child: Text("Request permissions"),
+                    onPressed: () => perm.requestOrGoToSettings(required),
+                  ),
+                ),
+              ));
+  }
 
   Widget _homePage(BuildContext context) => HomePage();
 

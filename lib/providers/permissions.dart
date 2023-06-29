@@ -5,7 +5,7 @@ import 'package:permission_handler/permission_handler.dart' as ph;
 enum PermissionGroup {
   storage(ph.Permission.storage),
   notif(ph.Permission.notification),
-  media(ph.Permission.mediaLibrary);
+  media(ph.Permission.audio);
 
   const PermissionGroup(this._perm);
 
@@ -29,7 +29,7 @@ enum PermissionStatus {
           : PermissionStatus.denied;
 }
 
-class PermissionsNotifier extends ChangeNotifier {
+class PermissionsNotifier extends ChangeNotifier with WidgetsBindingObserver {
   static const String tag = "PermissionsNotifier";
 
   /// Open the app settings
@@ -39,7 +39,19 @@ class PermissionsNotifier extends ChangeNotifier {
   final _statuses = <PermissionGroup, PermissionStatus>{};
 
   PermissionsNotifier() {
-    refreshStatus(PermissionGroup.values);
+    refreshStatus();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    switch (state) {
+      case AppLifecycleState.resumed:
+        debugPrint("[$tag]_didChangeAppLifecycleState: refreshing");
+        refreshStatus();
+        break;
+      default:
+        break;
+    }
   }
 
   /// Returns the status for the given permission
@@ -73,10 +85,11 @@ class PermissionsNotifier extends ChangeNotifier {
         debugPrint("[$tag]_requestOrGoToSettings: failed to launch settings");
       }
     }
+    await _updateInternal(permissions, perms);
   }
 
   /// Refresh the status of all permissions
-  Future<void> refreshStatus([List<PermissionGroup>? permissions]) async {
+  Future<void> refreshStatus() async {
     final perms = <PermissionStatus>[];
     for (var t in PermissionGroup.values) {
       perms.add(PermissionStatus._from(await t._perm.status));
