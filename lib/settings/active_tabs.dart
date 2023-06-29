@@ -7,20 +7,36 @@ import 'package:pref/pref.dart';
 
 /// Available tabs that can be displayed in the navigation bar
 enum AvailableTab {
-  queue(
-    id: "queue",
-    label: "Current queue",
-    appBarTitle: "Current queue",
-    iconDefault: Icons.queue_music_outlined,
-    iconSelected: Icons.queue_music,
-    alwaysActive: false,
-  ),
   folder(
     id: "folder",
     label: "Folder",
     appBarTitle: "Folder view",
     iconDefault: Icons.folder_outlined,
     iconSelected: Icons.folder,
+    alwaysActive: false,
+  ),
+  queue(
+    id: "queue",
+    label: "Current",
+    appBarTitle: "Current queue",
+    iconDefault: Icons.queue_music_outlined,
+    iconSelected: Icons.queue_music,
+    alwaysActive: false,
+  ),
+  keptMusics(
+    id: "kept_musics",
+    label: "Kept",
+    appBarTitle: "Kept musics",
+    iconDefault: Icons.music_note_outlined,
+    iconSelected: Icons.music_note,
+    alwaysActive: false,
+  ),
+  deletedMusics(
+    id: "deleted_musics",
+    label: "Deleted",
+    appBarTitle: "Deleted musics",
+    iconDefault: Icons.music_off_outlined,
+    iconSelected: Icons.music_off,
     alwaysActive: false,
   ),
   settings(
