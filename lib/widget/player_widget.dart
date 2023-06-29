@@ -25,6 +25,10 @@ class PlayerWidget extends StatelessWidget {
                 StoreButtonsWidget(iconSize: actionIconsSize),
               ],
             ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(8, 6, 8, 0),
+              child: DurationBar(),
+            ),
             PlayingMusicInfoWidget(),
           ]);
 }
@@ -109,29 +113,27 @@ class PlayingMusicInfoWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final player = Provider.of<PlayerStateController>(context, listen: false);
-
-    return StreamBuilder<int?>(
-        stream: player.indexInPlaylistStream,
-        builder: (context, snapshot) {
-          final queue =
-              Provider.of<PlayerQueueNotifier>(context, listen: false);
-
-          final idx = snapshot.data;
-          Music? music =
-              idx != null && idx < queue.queue.length ? queue.queue[idx] : null;
-          return Padding(
-            padding: const EdgeInsets.all(10.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                DurationBar(),
-                Text(music?.title ?? music?.filename ?? "N/A"),
-                Text("${music?.displayArtist} - ${music?.album}"),
-              ],
-            ),
-          );
-        });
+    return Consumer<PlayerQueueNotifier>(
+        builder: (context, queue, child) => StreamBuilder<int?>(
+            initialData: null,
+            stream: player.indexInPlaylistStream,
+            builder: (context, snapshot) {
+              final idx = snapshot.data;
+              Music? music = idx != null && idx < queue.queue.length
+                  ? queue.queue[idx]
+                  : null;
+              return Padding(
+                padding: const EdgeInsets.fromLTRB(10, 6, 10, 10),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(music?.title ?? music?.filename ?? "N/A"),
+                    Text("${music?.displayArtist} - ${music?.album}"),
+                  ],
+                ),
+              );
+            }));
   }
 }
 
@@ -179,7 +181,7 @@ class DurationBar extends StatelessWidget {
                 SizedBox(width: 10),
                 Expanded(
                     child: LinearProgressIndicator(
-                        value: max == 0 ? null : pos / max)),
+                        value: max == 0 ? 0 : pos / max)),
                 SizedBox(width: 10),
                 Text("-${formatSeconds(rem)}"),
               ],
