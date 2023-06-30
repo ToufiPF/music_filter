@@ -4,7 +4,7 @@ abstract class Store {
   /// Loads the given musics into the store.
   /// Clears the previous list from the store.
   /// The loaded musics are yielded by [allMusics]
-  Future<void> loadMusics(Stream<Music> musics);
+  Future<void> loadMusics(List<Music> musics);
 
   Future<List<Music>> musicsWithPrefix(String pathPrefix);
 

@@ -8,6 +8,7 @@ import 'package:path/path.dart' as p;
 import 'package:provider/provider.dart';
 
 import '../models/music.dart';
+import '../models/store.dart';
 import '../providers/folders.dart';
 import '../providers/playlist.dart';
 import 'context_menu.dart';
@@ -27,8 +28,16 @@ class _FileViewState extends State<FileView> {
   static const tag = FileView.tag;
 
   /// Actions that will popup when clicking on the "..." next to a file/folder item
-  static const filePopupActions = [MenuAction.addToPlaylist, MenuAction.delete];
-  static const dirPopupActions = [MenuAction.addToPlaylist, MenuAction.delete];
+  static const filePopupActions = [
+    MenuAction.addToPlaylist,
+    MenuAction.export,
+    MenuAction.delete,
+  ];
+  static const dirPopupActions = [
+    MenuAction.addToPlaylist,
+    MenuAction.export,
+    MenuAction.delete,
+  ];
 
   late Directory current;
 
@@ -44,11 +53,6 @@ class _FileViewState extends State<FileView> {
   void initState() {
     super.initState();
     current = widget.root;
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
   }
 
   @override
@@ -73,8 +77,8 @@ class _FileViewState extends State<FileView> {
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(24, 0, 0, 0),
-              child: Consumer2<ShowHiddenFilesNotifier,
-                  ShowEmptyFoldersNotifier>(
+              child:
+                  Consumer2<ShowHiddenFilesNotifier, ShowEmptyFoldersNotifier>(
                 builder: (context, hidden, empty, child) =>
                     FutureBuilder<List<Widget>>(
                         future: _loadChildren(context,
@@ -152,12 +156,14 @@ class _FileViewState extends State<FileView> {
   Future<void> _onPopupMenuAction(
       BuildContext context, MenuAction action, FileSystemEntity entity) async {
     final playlist = Provider.of<PlayerQueueNotifier>(context, listen: false);
+    final store = Provider.of<Store>(context, listen: false);
 
     switch (action) {
       case MenuAction.addToPlaylist:
         final musics = await _fetchMusicsIn(entity, recursive: true);
         debugPrint("[$tag] Adding $musics to playlist");
         playlist.appendAll(musics);
+        store.loadMusics(musics);
         break;
       case MenuAction.delete:
         break;

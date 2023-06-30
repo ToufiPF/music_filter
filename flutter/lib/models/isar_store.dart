@@ -13,11 +13,10 @@ class IsarStore implements Store {
       _musics.filter().pathStartsWith(pathPrefix).findAll();
 
   @override
-  Future<void> loadMusics(Stream<Music> musics) async {
-    final list = await musics.toList();
+  Future<void> loadMusics(List<Music> musics) async {
     await _musics.isar.writeTxn(() async {
       await _musics.clear();
-      await _musics.putAll(list);
+      await _musics.putAll(musics);
     });
   }
 
