@@ -17,7 +17,7 @@ class QueueView extends StatelessWidget {
   Widget build(BuildContext context) =>
       Consumer2<PlayerQueueNotifier, PlayerStateController>(
           builder: (context, queue, player, child) {
-        final store = Provider.of<Store>(context, listen: false);
+        final store = Provider.of<StateStore>(context, listen: false);
         return queue.queue.isEmpty
             ? Center(
                 child: Text("Nothing to play !\n"
@@ -43,7 +43,7 @@ class QueueView extends StatelessWidget {
     BuildContext context,
     PlayerQueueNotifier queue,
     PlayerStateController player,
-    Store store,
+    StateStore store,
     int musicIdx,
     bool isSongPlaying,
   ) {

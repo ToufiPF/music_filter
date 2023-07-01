@@ -75,7 +75,7 @@ class StoreButtonsWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final store = Provider.of<Store>(context, listen: false);
+    final store = Provider.of<StateStore>(context, listen: false);
     final player = Provider.of<PlayerStateController>(context, listen: false);
     final queue = Provider.of<PlayerQueueNotifier>(context, listen: false);
 

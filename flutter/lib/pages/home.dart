@@ -50,29 +50,31 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _bodyForTab(BuildContext context, AvailableTab tab) {
-    final store = Provider.of<Store>(context, listen: false);
+    final store = Provider.of<StateStore>(context, listen: false);
 
     return switch (tab) {
-      AvailableTab.folder =>
-        Consumer2<RootFolderNotifier, MusicHierarchyNotifier>(
-            builder: (context, rootPicker, hierarchy, child) {
-          if (rootPicker.rootFolder == null) {
-            return Center(
-              child: ElevatedButton(
-                onPressed: () => rootPicker.pickFolder(null),
-                child: Text("Chose a folder"),
-              ),
-            );
-          } else if (hierarchy.root == null) {
-            return Column(children: [
-              CircularProgressIndicator(),
-              SizedBox(height: 16),
-              Text("Scanning for musics..."),
-            ]);
-          } else {
-            return FileView(root: hierarchy.root!);
-          }
-        }),
+      AvailableTab.folder => Consumer<RootFolderNotifier>(
+          builder: (context, rootPicker, child) =>
+              Selector<MusicHierarchyNotifier, MusicFolder?>(
+                  selector: (context, hierarchy) => hierarchy.root,
+                  builder: (context, musicRoot, child) {
+                    if (rootPicker.rootFolder == null) {
+                      return Center(
+                        child: ElevatedButton(
+                          onPressed: () => rootPicker.pickFolder(null),
+                          child: Text("Chose a folder"),
+                        ),
+                      );
+                    } else if (musicRoot == null) {
+                      return Column(children: [
+                        CircularProgressIndicator(),
+                        SizedBox(height: 16),
+                        Text("Scanning for musics..."),
+                      ]);
+                    } else {
+                      return FileView(root: musicRoot);
+                    }
+                  })),
       AvailableTab.queue => QueueView(),
       // Must wrap in builder to re-generate a stream each time this widget is shown,
       // otherwise changing tab disposes of the widget and cancels the stream

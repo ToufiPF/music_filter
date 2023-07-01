@@ -53,9 +53,9 @@ Future<void> main() async {
   await isarDir.create(recursive: true);
 
   final isar = await Isar.open([MusicSchema], directory: isarDir.path);
-  final Store store = IsarStore(isar.musics);
+  final StateStore store = IsarStateStore(isar.musics);
 
-  final musics = MusicHierarchyNotifier();
+  final MusicHierarchyNotifier musics = MusicHierarchyNotifierImpl();
 
   runApp(MultiProvider(
     providers: [

@@ -5,12 +5,31 @@ import 'package:flutter_media_metadata/flutter_media_metadata.dart';
 
 import '../models/music.dart';
 
-class MusicHierarchyNotifier extends ChangeNotifier {
+mixin MusicHierarchyNotifier on ChangeNotifier {
+  MusicFolder? get root;
+
+  Future<void> rescan(Directory root);
+
+  List<MusicFolder> get openedFolders;
+
+  Future<void> openFolder(MusicFolder folder, {bool recursive = true});
+
+  Future<void> closeFolder(MusicFolder folder,
+      {KeepState stateIfUnspecified = KeepState.unspecified,
+      bool recursive = true});
+}
+
+class MusicHierarchyNotifierImpl extends ChangeNotifier
+    with MusicHierarchyNotifier {
   static const String tag = "MusicHierarchyNotifier";
   MusicFolder? _root;
 
+  @override
   MusicFolder? get root => _root;
 
+  final List<MusicFolder> _opened = [];
+
+  @override
   Future<void> rescan(Directory root) async {
     debugPrint("[$tag]: Rescanning $root...");
     var parentOfRoot = MusicFolder(path: root.parent.path, parent: null);
@@ -20,6 +39,34 @@ class MusicHierarchyNotifier extends ChangeNotifier {
         "[$tag]: Scanning done: $newRoot has ${newRoot?.folders.length} subfolders "
         "and ${newRoot?.musics.length} musics");
     _root = newRoot;
+    _opened.clear();
+    notifyListeners();
+  }
+
+  @override
+  List<MusicFolder> get openedFolders => _opened.toList(growable: false);
+
+  @override
+  Future<void> openFolder(MusicFolder folder, {bool recursive = false}) async {
+    if (recursive) {
+      await Future.forEach(
+          folder.folders, (e) => openFolder(e, recursive: true));
+    }
+    _opened.add(folder);
+    notifyListeners();
+  }
+
+  @override
+  Future<void> closeFolder(MusicFolder folder,
+      {KeepState stateIfUnspecified = KeepState.unspecified,
+      bool recursive = true}) async {
+    if (recursive) {
+      await Future.forEach(
+          folder.folders,
+          (e) => closeFolder(e,
+              stateIfUnspecified: stateIfUnspecified, recursive: true));
+    }
+    _opened.remove(folder);
     notifyListeners();
   }
 
