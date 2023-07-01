@@ -77,61 +77,60 @@ class _FileViewState extends State<FileView> {
               child:
                   Consumer2<ShowHiddenFilesNotifier, ShowEmptyFoldersNotifier>(
                       builder: (context, hidden, empty, child) {
-                var children = _loadChildren(context,
-                    showEmpty: empty.show, showHidden: hidden.show);
-                if (children.isEmpty) {
+                final (folders, musics) = _getEntriesToShow(
+                    showHidden: hidden.show, showEmpty: empty.show);
+
+                if (folders.isEmpty && musics.isEmpty) {
                   return Text("Empty");
                 } else {
-                  return ListView(
+                  return ListView.builder(
+                    itemCount: folders.length + musics.length,
                     shrinkWrap: true,
-                    children: children,
+                    itemBuilder: (context, index) {
+                      if (index < folders.length) {
+                        final folder = folders[index];
+                        return ListTile(
+                          title: Text(p.basename(folder.path)),
+                          leading: Icon(Icons.folder_outlined),
+                          trailing: _trailingFolderIcon(context, folder),
+                          onTap: () => setState(() => current = folder),
+                        );
+                      } else {
+                        index -= folders.length;
+                        final music = musics[index];
+                        return ListTile(
+                          title: Text(p.basename(music.path)),
+                          onTap: null,
+                          trailing: PopupMenuButton<int>(
+                            itemBuilder: (context) => [
+                              for (var action in filePopupActions)
+                                PopupMenuItem<int>(
+                                    value: action.index,
+                                    child: Text(action.text)),
+                            ],
+                            child: Icon(Icons.more_vert, size: 32),
+                            onSelected: (index) => _onMusicPopupMenuAction(
+                                context, MenuAction.values[index], music),
+                          ),
+                        );
+                      }
+                    },
                   );
                 }
               })),
         ],
       ));
 
-  List<Widget> _loadChildren(BuildContext context,
+  (List<MusicFolder>, List<Music>) _getEntriesToShow(
       {required bool showHidden, required bool showEmpty}) {
-    // skip hidden files ?
-    final files = current.musics
+    final folders = current.folders
+        .where((e) => showHidden || !p.basename(e.path).startsWith('.'))
+        .where((e) => showEmpty || e.allDescendants.isNotEmpty)
+        .sortedBy((e) => e.path);
+    final musics = current.musics
         .where((e) => showHidden || !p.basename(e.path).startsWith('.'))
         .sortedBy((e) => e.path);
-    final directories = current.folders
-        .where((e) => showHidden || !p.basename(e.path).startsWith('.'))
-        .sortedBy((e) => e.path);
-
-    final children = <Widget>[];
-    for (var dir in directories) {
-      // skip empty folders ?
-      if (!showEmpty && dir.allDescendants.isEmpty) {
-        continue;
-      }
-
-      children.add(ListTile(
-        title: Text(p.basename(dir.path)),
-        leading: Icon(Icons.folder_outlined),
-        trailing: _trailingFolderIcon(context, dir),
-        onTap: () => setState(() => current = dir),
-      ));
-    }
-
-    children.addAll(files.map((e) => ListTile(
-          title: Text(p.basename(e.path)),
-          onTap: null,
-          trailing: PopupMenuButton<int>(
-            itemBuilder: (context) => [
-              for (var action in filePopupActions)
-                PopupMenuItem<int>(
-                    value: action.index, child: Text(action.text)),
-            ],
-            child: Icon(Icons.more_vert, size: 32),
-            onSelected: (index) =>
-                _onMusicPopupMenuAction(context, MenuAction.values[index], e),
-          ),
-        )));
-
-    return children;
+    return (folders, musics);
   }
 
   Widget _trailingFolderIcon(BuildContext context, MusicFolder dir) =>
