@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../models/music.dart';
 import '../models/store.dart';
 import '../providers/active_tabs.dart';
+import '../providers/music_hierarchy.dart';
 import '../providers/root_folder.dart';
 import '../settings/active_tabs.dart';
 import '../settings/settings.dart';
@@ -52,14 +53,21 @@ class _HomePageState extends State<HomePage> {
     final store = Provider.of<Store>(context, listen: false);
 
     return switch (tab) {
-      AvailableTab.folder => Consumer<RootFolderNotifier>(
-          builder: (context, rootFolder, child) => rootFolder.rootFolder == null
-              ? Center(
-                  child: ElevatedButton(
-                  onPressed: () => rootFolder.pickFolder(null),
-                  child: Text("Chose a folder"),
-                ))
-              : FileView(root: rootFolder.rootFolder!)),
+      AvailableTab.folder =>
+        Consumer<MusicHierarchyNotifier>(builder: (context, hierarchy, child) {
+          if (hierarchy.root == null) {
+            final rootPicker =
+                Provider.of<RootFolderNotifier>(context, listen: false);
+            return Center(
+              child: ElevatedButton(
+                onPressed: () => rootPicker.pickFolder(null),
+                child: Text("Chose a folder"),
+              ),
+            );
+          } else {
+            return FileView(root: hierarchy.root!);
+          }
+        }),
       AvailableTab.queue => QueueView(),
       AvailableTab.keptMusics => StreamBuilder<List<Music>>(
           initialData: [],

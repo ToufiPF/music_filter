@@ -13,6 +13,7 @@ import 'models/store.dart';
 import 'pages/home.dart';
 import 'providers/active_tabs.dart';
 import 'providers/folders.dart';
+import 'providers/music_hierarchy.dart';
 import 'providers/permissions.dart';
 import 'providers/player.dart';
 import 'providers/playlist.dart';
@@ -54,6 +55,8 @@ Future<void> main() async {
   final isar = await Isar.open([MusicSchema], directory: isarDir.path);
   final Store store = IsarStore(isar.musics);
 
+  final musics = MusicHierarchyNotifier();
+
   runApp(MultiProvider(
     providers: [
       ChangeNotifierProvider(
@@ -65,25 +68,61 @@ Future<void> main() async {
       ChangeNotifierProvider.value(value: permissions),
       ChangeNotifierProvider.value(value: rootFolder),
       ChangeNotifierProvider.value(value: playlist),
+      ChangeNotifierProvider.value(value: musics),
       Provider.value(value: player),
       Provider.value(value: store),
     ],
     child: PrefService(
       service: prefService,
-      child: MyApp(),
+      child: MyApp(
+        rootFolder: rootFolder,
+        hierarchy: musics,
+      ),
     ),
   ));
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   static const String title = "MusicFilter";
   static const String version = "1.0.0";
 
-  const MyApp({super.key});
+  const MyApp({
+    super.key,
+    required this.rootFolder,
+    required this.hierarchy,
+  });
+
+  final RootFolderNotifier rootFolder;
+  final MusicHierarchyNotifier hierarchy;
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  @override
+  void initState() {
+    super.initState();
+    widget.rootFolder.addListener(_onRootChanged);
+    _onRootChanged();
+  }
+
+  @override
+  void dispose() {
+    widget.rootFolder.removeListener(_onRootChanged);
+    super.dispose();
+  }
+
+  void _onRootChanged() {
+    final root = widget.rootFolder.rootFolder;
+    if (root != null) {
+      widget.hierarchy.rescan(root);
+    }
+  }
 
   @override
   Widget build(BuildContext context) => MaterialApp(
-          title: title,
+          title: MyApp.title,
           theme: ThemeData(
             colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
             useMaterial3: true,
@@ -95,8 +134,8 @@ class MyApp extends StatelessWidget {
             '/home': _homePage,
             '/settings': _settingsPage,
             '/licenses': (_) => LicensePage(
-                  applicationName: title,
-                  applicationVersion: version,
+                  applicationName: MyApp.title,
+                  applicationVersion: MyApp.version,
                   applicationIcon: null,
                   applicationLegalese: null,
                 ),

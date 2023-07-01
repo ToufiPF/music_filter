@@ -1,15 +1,12 @@
-import 'dart:io';
-
-import 'package:async/async.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_media_metadata/flutter_media_metadata.dart';
 import 'package:path/path.dart' as p;
 import 'package:provider/provider.dart';
 
 import '../models/music.dart';
 import '../models/store.dart';
 import '../providers/folders.dart';
+import '../providers/music_hierarchy.dart';
 import '../providers/playlist.dart';
 import 'context_menu.dart';
 
@@ -18,7 +15,7 @@ class FileView extends StatefulWidget {
 
   const FileView({super.key, required this.root});
 
-  final Directory root;
+  final MusicFolder root;
 
   @override
   State<StatefulWidget> createState() => _FileViewState();
@@ -39,14 +36,14 @@ class _FileViewState extends State<FileView> {
     MenuAction.delete,
   ];
 
-  late Directory current;
+  late MusicFolder current;
 
   /// Whether we can go up in the file hierarchy
-  bool get canGoUp => widget.root.path != current.path;
+  bool get canGoUp => !current.isRoot;
 
   void goUp() {
     assert(canGoUp, "goUp() called without checking canGoUp");
-    setState(() => current = current.parent);
+    setState(() => current = current.parent!);
   }
 
   @override
@@ -57,65 +54,57 @@ class _FileViewState extends State<FileView> {
 
   @override
   Widget build(BuildContext context) => WillPopScope(
-        onWillPop: () async {
-          debugPrint("[$tag] WillPop: $current; ${widget.root}");
-          if (canGoUp) {
-            goUp();
-            return false;
-          } else {
-            return true;
-          }
-        },
-        child: Column(
-          children: [
-            ListTile(
-              title: Text(current.path),
-              leading: IconButton(
-                icon: Icon(Icons.drive_folder_upload),
-                onPressed: canGoUp ? () => goUp() : null,
-              ),
+      onWillPop: () async {
+        debugPrint("[$tag] WillPop: $current; ${widget.root}");
+        if (canGoUp) {
+          goUp();
+          return false;
+        } else {
+          return true;
+        }
+      },
+      child: Column(
+        children: [
+          ListTile(
+            title: Text(current.path),
+            leading: IconButton(
+              icon: Icon(Icons.drive_folder_upload),
+              onPressed: canGoUp ? () => goUp() : null,
             ),
-            Padding(
+          ),
+          Padding(
               padding: const EdgeInsets.fromLTRB(24, 0, 0, 0),
               child:
                   Consumer2<ShowHiddenFilesNotifier, ShowEmptyFoldersNotifier>(
-                builder: (context, hidden, empty, child) =>
-                    FutureBuilder<List<Widget>>(
-                        future: _loadChildren(context,
-                            showEmpty: empty.show, showHidden: hidden.show),
-                        builder: (context, snapshot) {
-                          var children = snapshot.data;
-                          if (children == null) {
-                            return CircularProgressIndicator();
-                          } else if (children.isEmpty) {
-                            return Text("Empty");
-                          } else {
-                            return ListView(
-                              shrinkWrap: true,
-                              children: children,
-                            );
-                          }
-                        }),
-              ),
-            ),
-          ],
-        ),
-      );
+                      builder: (context, hidden, empty, child) {
+                var children = _loadChildren(context,
+                    showEmpty: empty.show, showHidden: hidden.show);
+                if (children.isEmpty) {
+                  return Text("Empty");
+                } else {
+                  return ListView(
+                    shrinkWrap: true,
+                    children: children,
+                  );
+                }
+              })),
+        ],
+      ));
 
-  Future<List<Widget>> _loadChildren(BuildContext context,
-      {required bool showHidden, required bool showEmpty}) async {
+  List<Widget> _loadChildren(BuildContext context,
+      {required bool showHidden, required bool showEmpty}) {
     // skip hidden files ?
-    final entries = await current
-        .list()
+    final files = current.musics
         .where((e) => showHidden || !p.basename(e.path).startsWith('.'))
-        .toList();
-    final files = entries.whereType<File>().sortedBy((e) => e.path);
-    final directories = entries.whereType<Directory>().sortedBy((e) => e.path);
+        .sortedBy((e) => e.path);
+    final directories = current.folders
+        .where((e) => showHidden || !p.basename(e.path).startsWith('.'))
+        .sortedBy((e) => e.path);
 
     final children = <Widget>[];
     for (var dir in directories) {
       // skip empty folders ?
-      if (!showEmpty && (await dir.list().firstOrNull) == null) {
+      if (!showEmpty && dir.allDescendants.isEmpty) {
         continue;
       }
 
@@ -130,7 +119,7 @@ class _FileViewState extends State<FileView> {
           ],
           child: Icon(Icons.more_vert, size: 32),
           onSelected: (index) =>
-              _onPopupMenuAction(context, MenuAction.values[index], dir),
+              _onFolderPopupMenuAction(context, MenuAction.values[index], dir),
         ),
       ));
     }
@@ -146,24 +135,24 @@ class _FileViewState extends State<FileView> {
             ],
             child: Icon(Icons.more_vert, size: 32),
             onSelected: (index) =>
-                _onPopupMenuAction(context, MenuAction.values[index], e),
+                _onMusicPopupMenuAction(context, MenuAction.values[index], e),
           ),
         )));
 
     return children;
   }
 
-  Future<void> _onPopupMenuAction(
-      BuildContext context, MenuAction action, FileSystemEntity entity) async {
+  Future<void> _onFolderPopupMenuAction(
+      BuildContext context, MenuAction action, MusicFolder e) async {
     final playlist = Provider.of<PlayerQueueNotifier>(context, listen: false);
     final store = Provider.of<Store>(context, listen: false);
 
     switch (action) {
       case MenuAction.addToPlaylist:
-        final musics = await _fetchMusicsIn(entity, recursive: true);
+        final musics = e.allDescendants;
         debugPrint("[$tag] Adding $musics to playlist");
-        playlist.appendAll(musics);
-        store.loadMusics(musics);
+        await playlist.appendAll(musics);
+        await store.loadMusics(musics);
         break;
       case MenuAction.delete:
         break;
@@ -172,38 +161,22 @@ class _FileViewState extends State<FileView> {
     }
   }
 
-  Future<List<Music>> _fetchMusicsIn(FileSystemEntity e,
-      {bool recursive = true}) async {
-    final musics = <Music>[];
-    if (e is File) {
-      Music? music = await _fetchTags(e);
-      if (music != null) {
-        musics.add(music);
-      }
-    } else if (e is Directory) {
-      await for (var file in e.list(recursive: recursive, followLinks: false)) {
-        if (file is File) {
-          Music? music = await _fetchTags(file);
-          if (music != null) {
-            musics.add(music);
-          }
-        }
-      }
-    } else {
-      debugPrint("[$tag]_fetchMusicsIn on $e: Skipped.");
+  Future<void> _onMusicPopupMenuAction(
+      BuildContext context, MenuAction action, Music e) async {
+    final playlist = Provider.of<PlayerQueueNotifier>(context, listen: false);
+    final store = Provider.of<Store>(context, listen: false);
+
+    switch (action) {
+      case MenuAction.addToPlaylist:
+        final musics = [e];
+        debugPrint("[$tag] Adding $musics to playlist");
+        await playlist.appendAll(musics);
+        await store.loadMusics(musics);
+        break;
+      case MenuAction.delete:
+        break;
+      default:
+        throw StateError("Clicked on unsupported menu item $action");
     }
-
-    return musics;
-  }
-
-  Future<Music?> _fetchTags(File file) async {
-    final metadata = await MetadataRetriever.fromFile(file);
-    return Music(
-      path: file.path,
-      title: metadata.trackName,
-      artists: metadata.trackArtistNames ?? [],
-      album: metadata.albumName,
-      albumArtist: metadata.albumArtistName,
-    );
   }
 }
