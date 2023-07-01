@@ -26,8 +26,9 @@ class MusicListView extends StatelessWidget {
         final music = musics[idx];
         return ListTile(
           title: Text(music.title ?? music.filename),
-          subtitle: Text("${music.displayArtist}\n${music.path}"),
-          isThreeLine: true,
+          subtitle: Text(music.displayArtist),
+          // subtitle: Text("${music.displayArtist}\n${music.path}", maxLines: 2),
+          // isThreeLine: false,
           trailing: PopupMenuButton<int>(
             child: Icon(Icons.more_vert, size: 32),
             itemBuilder: (context) => [
