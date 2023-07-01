@@ -6,7 +6,6 @@ import 'package:provider/provider.dart';
 import '../models/music.dart';
 import '../models/store.dart';
 import '../providers/folders.dart';
-import '../providers/music_hierarchy.dart';
 import '../providers/playlist.dart';
 import 'context_menu.dart';
 
@@ -71,6 +70,7 @@ class _FileViewState extends State<FileView> {
               icon: Icon(Icons.drive_folder_upload),
               onPressed: canGoUp ? () => goUp() : null,
             ),
+            trailing: _trailingFolderIcon(context, current),
           ),
           Padding(
               padding: const EdgeInsets.fromLTRB(24, 0, 0, 0),
@@ -111,16 +111,8 @@ class _FileViewState extends State<FileView> {
       children.add(ListTile(
         title: Text(p.basename(dir.path)),
         leading: Icon(Icons.folder_outlined),
+        trailing: _trailingFolderIcon(context, dir),
         onTap: () => setState(() => current = dir),
-        trailing: PopupMenuButton<int>(
-          itemBuilder: (context) => [
-            for (var action in dirPopupActions)
-              PopupMenuItem<int>(value: action.index, child: Text(action.text)),
-          ],
-          child: Icon(Icons.more_vert, size: 32),
-          onSelected: (index) =>
-              _onFolderPopupMenuAction(context, MenuAction.values[index], dir),
-        ),
       ));
     }
 
@@ -142,6 +134,17 @@ class _FileViewState extends State<FileView> {
     return children;
   }
 
+  Widget _trailingFolderIcon(BuildContext context, MusicFolder dir) =>
+      PopupMenuButton<int>(
+        itemBuilder: (context) => [
+          for (var action in dirPopupActions)
+            PopupMenuItem<int>(value: action.index, child: Text(action.text)),
+        ],
+        child: Icon(Icons.more_vert, size: 32),
+        onSelected: (index) =>
+            _onFolderPopupMenuAction(context, MenuAction.values[index], dir),
+      );
+
   Future<void> _onFolderPopupMenuAction(
       BuildContext context, MenuAction action, MusicFolder e) async {
     final playlist = Provider.of<PlayerQueueNotifier>(context, listen: false);
@@ -152,7 +155,6 @@ class _FileViewState extends State<FileView> {
         final musics = e.allDescendants;
         debugPrint("[$tag] Adding $musics to playlist");
         await playlist.appendAll(musics);
-        await store.loadMusics(musics);
         break;
       case MenuAction.delete:
         break;
@@ -171,7 +173,6 @@ class _FileViewState extends State<FileView> {
         final musics = [e];
         debugPrint("[$tag] Adding $musics to playlist");
         await playlist.appendAll(musics);
-        await store.loadMusics(musics);
         break;
       case MenuAction.delete:
         break;
