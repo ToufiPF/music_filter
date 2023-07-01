@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:isar/isar.dart';
 
 import 'music.dart';
@@ -29,8 +31,28 @@ class IsarStore implements Store {
       _musics.filter().stateEqualTo(state).watch(fireImmediately: true);
 
   @override
-  Future<void> markAs(Music music, KeepState newState) {
-    music.state = newState;
+  Future<void> markAs(Music music, KeepState state) {
+    music.state = state;
+    _controllers[music.id]?.add(state);
     return _musics.isar.writeTxn(() => _musics.put(music));
+  }
+
+  @override
+  Stream<KeepState> watchState(Music music) {
+    late final StreamController<KeepState> controller;
+
+    controller = _controllers.putIfAbsent(
+      music.id,
+      () => StreamController<KeepState>.broadcast(
+        sync: false,
+        onCancel: () {
+          if (controller.hasListener) {
+            _controllers.remove(music.id);
+          }
+        },
+      ),
+    );
+
+    return controller.stream;
   }
 }

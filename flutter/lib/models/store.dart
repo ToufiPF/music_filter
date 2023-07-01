@@ -14,6 +14,8 @@ abstract class Store {
   /// Stream with up-to-date musics with the given state
   Stream<List<Music>> musicsForState(KeepState state);
 
+  Stream<KeepState> watchState(Music music);
+
   /// Mark a music as being saved for the exporter
   Future<void> markAs(Music music, KeepState state);
 }

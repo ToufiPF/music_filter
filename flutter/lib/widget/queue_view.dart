@@ -54,35 +54,45 @@ class QueueView extends StatelessWidget {
       subtitle: Text(music.displayArtist),
       leading:
           Icon(isSongPlaying ? Icons.play_arrow : Icons.play_arrow_outlined),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.end,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          IconButton(
-            onPressed: () => store.markAs(music, KeepState.kept),
-            icon: Icon(Icons.save),
-          ),
-          IconButton(
-            onPressed: () => store.markAs(music, KeepState.deleted),
-            icon: Icon(Icons.delete_forever),
-          ),
-          PopupMenuButton<int>(
-            child: Icon(Icons.more_vert, size: 32),
-            itemBuilder: (context) => [
-              for (var action in popupActions)
-                PopupMenuItem<int>(
-                    value: action.index, child: Text(action.text)),
+      trailing: StreamBuilder<KeepState>(
+        initialData: music.state,
+        stream: store.watchState(music),
+        builder: (context, snapshot) {
+          return Row(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.end,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              IconButton(
+                onPressed: music.state != KeepState.kept
+                    ? () => store.markAs(music, KeepState.kept)
+                    : null,
+                icon: Icon(Icons.save),
+              ),
+              IconButton(
+                onPressed: music.state != KeepState.deleted
+                    ? () => store.markAs(music, KeepState.deleted)
+                    : null,
+                icon: Icon(Icons.delete_forever),
+              ),
+              PopupMenuButton<int>(
+                child: Icon(Icons.more_vert, size: 32),
+                itemBuilder: (context) => [
+                  for (var action in popupActions)
+                    PopupMenuItem<int>(
+                        value: action.index, child: Text(action.text)),
+                ],
+                onSelected: (selectedAction) => _onPopupMenuAction(
+                  context,
+                  queue,
+                  player,
+                  MenuAction.values[selectedAction],
+                  musicIdx,
+                ),
+              ),
             ],
-            onSelected: (selectedAction) => _onPopupMenuAction(
-              context,
-              queue,
-              player,
-              MenuAction.values[selectedAction],
-              musicIdx,
-            ),
-          ),
-        ],
+          );
+        }
       ),
       onTap: () {
         // if song is currently playing, don't call play()
