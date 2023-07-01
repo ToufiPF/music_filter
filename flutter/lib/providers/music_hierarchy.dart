@@ -5,28 +5,6 @@ import 'package:flutter_media_metadata/flutter_media_metadata.dart';
 
 import '../models/music.dart';
 
-class MusicFolder {
-  final String path;
-  final MusicFolder? parent;
-  final List<MusicFolder> folders = [];
-  final List<Music> musics = [];
-
-  MusicFolder(this.path, this.parent);
-
-  bool get isRoot => parent == null;
-
-  List<Music> get allDescendants {
-    final list = musics.toList(growable: true);
-    for (var folder in folders) {
-      list.addAll(folder.allDescendants);
-    }
-    return list;
-  }
-
-  @override
-  String toString() => "MusicFolder($path, parent: ${parent?.path})";
-}
-
 class MusicHierarchyNotifier extends ChangeNotifier {
   static const String tag = "MusicHierarchyNotifier";
   MusicFolder? _root;
@@ -35,7 +13,7 @@ class MusicHierarchyNotifier extends ChangeNotifier {
 
   Future<void> rescan(Directory root) async {
     debugPrint("[$tag]: Rescanning $root...");
-    var parentOfRoot = MusicFolder(root.parent.path, null);
+    var parentOfRoot = MusicFolder(path: root.parent.path, parent: null);
     await _scan(parentOfRoot, root, isRoot: true);
     var newRoot = parentOfRoot.folders.singleOrNull;
     debugPrint(
@@ -53,7 +31,8 @@ class MusicHierarchyNotifier extends ChangeNotifier {
         parent.musics.add(music);
       }
     } else if (entity is Directory) {
-      var newFolder = MusicFolder(entity.path, isRoot ? null : parent);
+      var newFolder =
+          MusicFolder(path: entity.path, parent: isRoot ? null : parent);
       await entity
           .list(recursive: false, followLinks: false)
           .asyncMap((e) => _scan(newFolder, e, isRoot: false))
