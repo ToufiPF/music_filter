@@ -69,24 +69,29 @@ class _HomePageState extends State<HomePage> {
           }
         }),
       AvailableTab.queue => QueueView(),
-      AvailableTab.keptMusics => StreamBuilder<List<Music>>(
-          initialData: [],
-          stream: store.musicsForState(KeepState.kept),
-          builder: (context, snapshot) => MusicListView(
-            musics: snapshot.data!,
-            popupActions: [],
-            onSelected: (context, musicIdx, action) {},
-          ),
-        ),
-      AvailableTab.deletedMusics => StreamBuilder<List<Music>>(
-          initialData: [],
-          stream: store.musicsForState(KeepState.deleted),
-          builder: (context, snapshot) => MusicListView(
-            musics: snapshot.data!,
-            popupActions: [],
-            onSelected: (context, musicIdx, action) {},
-          ),
-        ),
+      // Must wrap in builder to re-generate a stream each time this widget is shown,
+      // otherwise changing tab disposes of the widget and cancels the stream
+      // => bad state stream already listened to
+      AvailableTab.keptMusics => Builder(
+          builder: (context) => StreamBuilder<List<Music>>(
+                initialData: [],
+                stream: store.musicsForState(KeepState.kept),
+                builder: (context, snapshot) => MusicListView(
+                  musics: snapshot.data!,
+                  popupActions: [],
+                  onSelected: (context, musicIdx, action) {},
+                ),
+              )),
+      AvailableTab.deletedMusics => Builder(
+          builder: (context) => StreamBuilder<List<Music>>(
+                initialData: [],
+                stream: store.musicsForState(KeepState.deleted),
+                builder: (context, snapshot) => MusicListView(
+                  musics: snapshot.data!,
+                  popupActions: [],
+                  onSelected: (context, musicIdx, action) {},
+                ),
+              )),
       AvailableTab.settings => SettingsPage(),
     };
   }

@@ -21,11 +21,12 @@ class IsarStore implements Store {
   }
 
   @override
-  Stream<List<Music>> allMusics() => _musics.where().watch();
+  Stream<List<Music>> allMusics() =>
+      _musics.where().watch(fireImmediately: true);
 
   @override
   Stream<List<Music>> musicsForState(KeepState state) =>
-      _musics.filter().stateEqualTo(state).watch();
+      _musics.filter().stateEqualTo(state).watch(fireImmediately: true);
 
   @override
   Future<void> markAs(Music music, KeepState newState) {
