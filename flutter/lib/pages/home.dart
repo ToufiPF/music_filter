@@ -54,16 +54,21 @@ class _HomePageState extends State<HomePage> {
 
     return switch (tab) {
       AvailableTab.folder =>
-        Consumer<MusicHierarchyNotifier>(builder: (context, hierarchy, child) {
-          if (hierarchy.root == null) {
-            final rootPicker =
-                Provider.of<RootFolderNotifier>(context, listen: false);
+        Consumer2<RootFolderNotifier, MusicHierarchyNotifier>(
+            builder: (context, rootPicker, hierarchy, child) {
+          if (rootPicker.rootFolder == null) {
             return Center(
               child: ElevatedButton(
                 onPressed: () => rootPicker.pickFolder(null),
                 child: Text("Chose a folder"),
               ),
             );
+          } else if (hierarchy.root == null) {
+            return Column(children: [
+              CircularProgressIndicator(),
+              SizedBox(height: 16),
+              Text("Scanning for musics..."),
+            ]);
           } else {
             return FileView(root: hierarchy.root!);
           }
