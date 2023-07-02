@@ -1,6 +1,5 @@
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
-import 'package:path/path.dart' as p;
 import 'package:provider/provider.dart';
 
 import '../models/music.dart';
@@ -74,56 +73,19 @@ class _FileViewState extends State<FileView> {
               ),
               trailing: _trailingFolderIcon(context, current),
             ),
-            Padding(
-                padding: const EdgeInsets.fromLTRB(24, 0, 0, 0),
-                child: Consumer2<ShowHiddenFilesNotifier,
-                        ShowEmptyFoldersNotifier>(
-                    builder: (context, hidden, empty, child) {
-                  final (folders, musics) = _getEntriesToShow(
-                      showHidden: hidden.show, showEmpty: empty.show);
+            Consumer2<ShowHiddenFilesNotifier, ShowEmptyFoldersNotifier>(
+                builder: (context, hidden, empty, child) {
+              final (folders, musics) = _getEntriesToShow(
+                  showHidden: hidden.show, showEmpty: empty.show);
 
-                  if (folders.isEmpty && musics.isEmpty) {
-                    return Text("Empty");
-                  } else {
-                    return ListView.builder(
-                      itemCount: folders.length + musics.length,
-                      shrinkWrap: true,
-                      itemBuilder: (context, index) {
-                        if (index < folders.length) {
-                          final folder = folders[index];
-                          final isFolderOpen =
-                              hierarchy.openedFolders.contains(folder);
-                          return ListTile(
-                            selected: isFolderOpen,
-                            title: Text(p.basename(folder.path)),
-                            leading: Icon(Icons.folder_outlined),
-                            trailing: _trailingFolderIcon(context, folder),
-                            onTap: () => setState(() => current = folder),
-                          );
-                        } else {
-                          index -= folders.length;
-                          final music = musics[index];
-                          return ListTile(
-                            selected: isCurrentFolderOpen,
-                            title: Text(p.basename(music.path)),
-                            onTap: null,
-                            trailing: PopupMenuButton<int>(
-                              itemBuilder: (context) => [
-                                for (var action in filePopupActions)
-                                  PopupMenuItem<int>(
-                                      value: action.index,
-                                      child: Text(action.text)),
-                              ],
-                              child: Icon(Icons.more_vert, size: 32),
-                              onSelected: (index) => _onMusicPopupMenuAction(
-                                  context, MenuAction.values[index], music),
-                            ),
-                          );
-                        }
-                      },
-                    );
-                  }
-                })),
+              if (folders.isEmpty && musics.isEmpty) {
+                return Text("Empty");
+              } else {
+                return Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 0, 0, 0),
+                    child: _listView(context, hierarchy, folders, musics));
+              }
+            }),
           ],
         );
       }));
@@ -131,13 +93,56 @@ class _FileViewState extends State<FileView> {
   (List<MusicFolder>, List<Music>) _getEntriesToShow(
       {required bool showHidden, required bool showEmpty}) {
     final folders = current.folders
-        .where((e) => showHidden || !p.basename(e.path).startsWith('.'))
+        .where((e) => showHidden || !e.folderName.startsWith('.'))
         .where((e) => showEmpty || e.allDescendants.isNotEmpty)
         .sortedBy((e) => e.path);
     final musics = current.musics
-        .where((e) => showHidden || !p.basename(e.path).startsWith('.'))
+        .where((e) => showHidden || !e.filename.startsWith('.'))
         .sortedBy((e) => e.path);
     return (folders, musics);
+  }
+
+  Widget _listView(
+    BuildContext context,
+    MusicHierarchyNotifier hierarchy,
+    List<MusicFolder> folders,
+    List<Music> musics,
+  ) {
+    final isCurrentFolderOpen = hierarchy.openedFolders.contains(current);
+    return ListView.builder(
+        itemCount: folders.length + musics.length,
+        shrinkWrap: true,
+        itemBuilder: (context, index) {
+          if (index < folders.length) {
+            final folder = folders[index];
+            final isFolderOpen = hierarchy.openedFolders.contains(folder);
+            return ListTile(
+              selected: isFolderOpen,
+              title: Text(folder.folderName),
+              leading: Icon(Icons.folder_outlined),
+              trailing: _trailingFolderIcon(context, folder),
+              onTap: () => setState(() => current = folder),
+            );
+          } else {
+            index -= folders.length;
+            final music = musics[index];
+            return ListTile(
+              selected: isCurrentFolderOpen,
+              title: Text(music.filename),
+              onTap: null,
+              trailing: PopupMenuButton<int>(
+                itemBuilder: (context) => [
+                  for (var action in filePopupActions)
+                    PopupMenuItem<int>(
+                        value: action.index, child: Text(action.text)),
+                ],
+                child: Icon(Icons.more_vert, size: 32),
+                onSelected: (index) => _onMusicPopupMenuAction(
+                    context, MenuAction.values[index], music),
+              ),
+            );
+          }
+        });
   }
 
   Widget _trailingFolderIcon(BuildContext context, MusicFolder dir) =>

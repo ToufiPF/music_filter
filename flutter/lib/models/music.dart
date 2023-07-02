@@ -78,6 +78,9 @@ class MusicFolder {
   /// Whether this music folder is at the root of the hierarchy
   bool get isRoot => parent == null;
 
+  /// Base name of this folder
+  String get folderName => p.basename(path);
+
   /// Collect the list of all musics under that folder (recursively)
   List<Music> get allDescendants {
     final list = musics.toList(growable: true);
