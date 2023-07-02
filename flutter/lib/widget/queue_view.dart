@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../models/music.dart';
-import '../models/store.dart';
+import '../models/catalog.dart';
+import '../models/state_store.dart';
 import '../providers/player.dart';
 import '../providers/playlist.dart';
 import 'context_menu.dart';
@@ -55,8 +56,8 @@ class QueueView extends StatelessWidget {
       leading:
           Icon(isSongPlaying ? Icons.play_arrow : Icons.play_arrow_outlined),
       trailing: StreamBuilder<KeepState>(
-        initialData: music.state,
-        stream: store.watchState(music),
+        initialData: KeepState.unspecified,
+        stream: store.watchState(music, fireImmediately: true),
         builder: (context, snapshot) {
           return Row(
             mainAxisSize: MainAxisSize.min,
@@ -64,13 +65,13 @@ class QueueView extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               IconButton(
-                onPressed: music.state != KeepState.kept
+                onPressed: snapshot.data != KeepState.kept
                     ? () => store.markAs(music, KeepState.kept)
                     : null,
                 icon: Icon(Icons.save),
               ),
               IconButton(
-                onPressed: music.state != KeepState.deleted
+                onPressed: snapshot.data != KeepState.deleted
                     ? () => store.markAs(music, KeepState.deleted)
                     : null,
                 icon: Icon(Icons.delete_forever),

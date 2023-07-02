@@ -1,10 +1,11 @@
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
+import 'package:music_filter/models/state_store.dart';
 import 'package:provider/provider.dart';
 
+import '../models/catalog.dart';
 import '../models/music.dart';
 import '../providers/folders.dart';
-import '../providers/music_hierarchy.dart';
 import '../providers/playlist.dart';
 import 'context_menu.dart';
 
@@ -59,13 +60,10 @@ class _FileViewState extends State<FileView> {
         } else {
           return true;
         }
-      }, child: Consumer<MusicHierarchyNotifier>(
-          builder: (context, hierarchy, child) {
-        final isCurrentFolderOpen = hierarchy.openedFolders.contains(current);
+      }, child: Consumer<Catalog>(builder: (context, hierarchy, child) {
         return Column(
           children: [
             ListTile(
-              selected: isCurrentFolderOpen,
               title: Text(current.path),
               leading: IconButton(
                 icon: Icon(Icons.drive_folder_upload),
@@ -83,7 +81,7 @@ class _FileViewState extends State<FileView> {
               } else {
                 return Padding(
                     padding: const EdgeInsets.fromLTRB(24, 0, 0, 0),
-                    child: _listView(context, hierarchy, folders, musics));
+                    child: _listView(context, folders, musics));
               }
             }),
           ],
@@ -104,20 +102,16 @@ class _FileViewState extends State<FileView> {
 
   Widget _listView(
     BuildContext context,
-    MusicHierarchyNotifier hierarchy,
     List<MusicFolder> folders,
     List<Music> musics,
   ) {
-    final isCurrentFolderOpen = hierarchy.openedFolders.contains(current);
     return ListView.builder(
         itemCount: folders.length + musics.length,
         shrinkWrap: true,
         itemBuilder: (context, index) {
           if (index < folders.length) {
             final folder = folders[index];
-            final isFolderOpen = hierarchy.openedFolders.contains(folder);
             return ListTile(
-              selected: isFolderOpen,
               title: Text(folder.folderName),
               leading: Icon(Icons.folder_outlined),
               trailing: _trailingFolderIcon(context, folder),
@@ -127,7 +121,6 @@ class _FileViewState extends State<FileView> {
             index -= folders.length;
             final music = musics[index];
             return ListTile(
-              selected: isCurrentFolderOpen,
               title: Text(music.filename),
               onTap: null,
               trailing: PopupMenuButton<int>(
@@ -159,15 +152,14 @@ class _FileViewState extends State<FileView> {
   Future<void> _onFolderPopupMenuAction(
       BuildContext context, MenuAction action, MusicFolder e) async {
     final playlist = Provider.of<PlayerQueueNotifier>(context, listen: false);
-    final folderStore =
-        Provider.of<MusicHierarchyNotifier>(context, listen: false);
+    final store = Provider.of<StateStore>(context, listen: false);
 
     switch (action) {
       case MenuAction.addToPlaylist:
         final musics = e.allDescendants;
         debugPrint("[$tag] Adding $musics to playlist");
         await playlist.appendAll(musics);
-        await folderStore.openFolder(e, recursive: true);
+        await store.startTracking(e.allDescendants);
         break;
       case MenuAction.delete:
         break;
@@ -179,15 +171,14 @@ class _FileViewState extends State<FileView> {
   Future<void> _onMusicPopupMenuAction(
       BuildContext context, MenuAction action, Music e) async {
     final playlist = Provider.of<PlayerQueueNotifier>(context, listen: false);
-    final folderStore =
-        Provider.of<MusicHierarchyNotifier>(context, listen: false);
+    final store = Provider.of<StateStore>(context, listen: false);
 
     switch (action) {
       case MenuAction.addToPlaylist:
         final musics = [e];
         debugPrint("[$tag] Adding $musics to playlist");
         await playlist.appendAll(musics);
-        await folderStore.openFolder(current, recursive: false);
+        await store.startTracking(musics);
         break;
       case MenuAction.delete:
         break;

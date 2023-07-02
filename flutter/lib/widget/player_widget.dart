@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../misc.dart';
 import '../models/music.dart';
-import '../models/store.dart';
+import '../models/state_store.dart';
 import '../providers/player.dart';
 import '../providers/playlist.dart';
 

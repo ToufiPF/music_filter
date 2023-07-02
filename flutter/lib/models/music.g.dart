@@ -37,14 +37,8 @@ const MusicSchema = CollectionSchema(
       name: r'path',
       type: IsarType.string,
     ),
-    r'state': PropertySchema(
-      id: 4,
-      name: r'state',
-      type: IsarType.byte,
-      enumMap: _MusicstateEnumValueMap,
-    ),
     r'title': PropertySchema(
-      id: 5,
+      id: 4,
       name: r'title',
       type: IsarType.string,
     )
@@ -122,8 +116,7 @@ void _musicSerialize(
   writer.writeString(offsets[1], object.albumArtist);
   writer.writeStringList(offsets[2], object.artists);
   writer.writeString(offsets[3], object.path);
-  writer.writeByte(offsets[4], object.state.index);
-  writer.writeString(offsets[5], object.title);
+  writer.writeString(offsets[4], object.title);
 }
 
 Music _musicDeserialize(
@@ -137,11 +130,9 @@ Music _musicDeserialize(
     albumArtist: reader.readStringOrNull(offsets[1]),
     artists: reader.readStringList(offsets[2]) ?? const [],
     path: reader.readString(offsets[3]),
-    title: reader.readStringOrNull(offsets[5]),
+    title: reader.readStringOrNull(offsets[4]),
   );
   object.id = id;
-  object.state = _MusicstateValueEnumMap[reader.readByteOrNull(offsets[4])] ??
-      KeepState.unspecified;
   return object;
 }
 
@@ -161,25 +152,11 @@ P _musicDeserializeProp<P>(
     case 3:
       return (reader.readString(offset)) as P;
     case 4:
-      return (_MusicstateValueEnumMap[reader.readByteOrNull(offset)] ??
-          KeepState.unspecified) as P;
-    case 5:
       return (reader.readStringOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
   }
 }
-
-const _MusicstateEnumValueMap = {
-  'unspecified': 0,
-  'kept': 1,
-  'deleted': 2,
-};
-const _MusicstateValueEnumMap = {
-  0: KeepState.unspecified,
-  1: KeepState.kept,
-  2: KeepState.deleted,
-};
 
 Id _musicGetId(Music object) {
   return object.id;
@@ -1050,59 +1027,6 @@ extension MusicQueryFilter on QueryBuilder<Music, Music, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Music, Music, QAfterFilterCondition> stateEqualTo(
-      KeepState value) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'state',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<Music, Music, QAfterFilterCondition> stateGreaterThan(
-    KeepState value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'state',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<Music, Music, QAfterFilterCondition> stateLessThan(
-    KeepState value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'state',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<Music, Music, QAfterFilterCondition> stateBetween(
-    KeepState lower,
-    KeepState upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'state',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
-    });
-  }
-
   QueryBuilder<Music, Music, QAfterFilterCondition> titleIsNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(const FilterCondition.isNull(
@@ -1289,18 +1213,6 @@ extension MusicQuerySortBy on QueryBuilder<Music, Music, QSortBy> {
     });
   }
 
-  QueryBuilder<Music, Music, QAfterSortBy> sortByState() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'state', Sort.asc);
-    });
-  }
-
-  QueryBuilder<Music, Music, QAfterSortBy> sortByStateDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'state', Sort.desc);
-    });
-  }
-
   QueryBuilder<Music, Music, QAfterSortBy> sortByTitle() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'title', Sort.asc);
@@ -1363,18 +1275,6 @@ extension MusicQuerySortThenBy on QueryBuilder<Music, Music, QSortThenBy> {
     });
   }
 
-  QueryBuilder<Music, Music, QAfterSortBy> thenByState() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'state', Sort.asc);
-    });
-  }
-
-  QueryBuilder<Music, Music, QAfterSortBy> thenByStateDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'state', Sort.desc);
-    });
-  }
-
   QueryBuilder<Music, Music, QAfterSortBy> thenByTitle() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'title', Sort.asc);
@@ -1416,12 +1316,6 @@ extension MusicQueryWhereDistinct on QueryBuilder<Music, Music, QDistinct> {
     });
   }
 
-  QueryBuilder<Music, Music, QDistinct> distinctByState() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'state');
-    });
-  }
-
   QueryBuilder<Music, Music, QDistinct> distinctByTitle(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
@@ -1458,12 +1352,6 @@ extension MusicQueryProperty on QueryBuilder<Music, Music, QQueryProperty> {
   QueryBuilder<Music, String, QQueryOperations> pathProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'path');
-    });
-  }
-
-  QueryBuilder<Music, KeepState, QQueryOperations> stateProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'state');
     });
   }
 

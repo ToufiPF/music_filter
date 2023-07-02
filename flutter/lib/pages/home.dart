@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../models/catalog.dart';
 import '../models/music.dart';
-import '../models/store.dart';
+import '../models/state_store.dart';
 import '../providers/active_tabs.dart';
-import '../providers/music_hierarchy.dart';
 import '../providers/root_folder.dart';
 import '../settings/active_tabs.dart';
 import '../settings/settings.dart';
@@ -53,28 +53,25 @@ class _HomePageState extends State<HomePage> {
     final store = Provider.of<StateStore>(context, listen: false);
 
     return switch (tab) {
-      AvailableTab.folder => Consumer<RootFolderNotifier>(
-          builder: (context, rootPicker, child) =>
-              Selector<MusicHierarchyNotifier, MusicFolder?>(
-                  selector: (context, hierarchy) => hierarchy.root,
-                  builder: (context, musicRoot, child) {
-                    if (rootPicker.rootFolder == null) {
-                      return Center(
-                        child: ElevatedButton(
-                          onPressed: () => rootPicker.pickFolder(null),
-                          child: Text("Chose a folder"),
-                        ),
-                      );
-                    } else if (musicRoot == null) {
-                      return Column(children: [
-                        CircularProgressIndicator(),
-                        SizedBox(height: 16),
-                        Text("Scanning for musics..."),
-                      ]);
-                    } else {
-                      return FileView(root: musicRoot);
-                    }
-                  })),
+      AvailableTab.folder => Consumer2<RootFolderNotifier, Catalog>(
+            builder: (context, rootPicker, musicRoot, child) {
+          if (rootPicker.rootFolder == null) {
+            return Center(
+              child: ElevatedButton(
+                onPressed: () => rootPicker.pickFolder(null),
+                child: Text("Chose a folder"),
+              ),
+            );
+          } else if (musicRoot.hierarchy == null) {
+            return Column(children: [
+              CircularProgressIndicator(),
+              SizedBox(height: 16),
+              Text("Scanning for musics..."),
+            ]);
+          } else {
+            return FileView(root: musicRoot.hierarchy!);
+          }
+        }),
       AvailableTab.queue => QueueView(),
       // Must wrap in builder to re-generate a stream each time this widget is shown,
       // otherwise changing tab disposes of the widget and cancels the stream

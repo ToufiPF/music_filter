@@ -3,17 +3,6 @@ import 'package:path/path.dart' as p;
 
 part 'music.g.dart';
 
-enum KeepState {
-  /// default state, never explicitly kept or deleted
-  unspecified,
-
-  /// user marked the music as kept
-  kept,
-
-  /// user marked the music as deleted
-  deleted;
-}
-
 /// Model for a music file
 @collection
 class Music {
@@ -42,10 +31,6 @@ class Music {
 
   /// Artist of the album of the track
   final String? albumArtist;
-
-  /// State of the music, i.e. whether user specified it should be kept/deleted
-  @enumerated
-  KeepState state = KeepState.unspecified;
 
   /// Basename of the file, computed from [path]
   @ignore

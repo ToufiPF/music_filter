@@ -7,13 +7,14 @@ import 'package:path_provider/path_provider.dart';
 import 'package:pref/pref.dart';
 import 'package:provider/provider.dart';
 
-import 'models/isar_store.dart';
+import 'models/catalog.dart';
+import 'models/isar_catalog.dart';
+import 'models/isar_state_store.dart';
 import 'models/music.dart';
-import 'models/store.dart';
+import 'models/state_store.dart';
 import 'pages/home.dart';
 import 'providers/active_tabs.dart';
 import 'providers/folders.dart';
-import 'providers/music_hierarchy.dart';
 import 'providers/permissions.dart';
 import 'providers/player.dart';
 import 'providers/playlist.dart';
@@ -52,10 +53,12 @@ Future<void> main() async {
   final isarDir = Directory('${docDir.path}/isar_db');
   await isarDir.create(recursive: true);
 
-  final isar = await Isar.open([MusicSchema], directory: isarDir.path);
-  final StateStore store = IsarStateStore(isar.musics);
-
-  final MusicHierarchyNotifier musics = MusicHierarchyNotifierImpl();
+  final isar = await Isar.open(
+    [MusicSchema, MusicStateSchema],
+    directory: isarDir.path,
+  );
+  final Catalog catalog = IsarCatalog(isarDb: isar);
+  final StateStore stateStore = IsarStateStore(isarDb: isar);
 
   runApp(MultiProvider(
     providers: [
@@ -68,15 +71,15 @@ Future<void> main() async {
       ChangeNotifierProvider.value(value: permissions),
       ChangeNotifierProvider.value(value: rootFolder),
       ChangeNotifierProvider.value(value: playlist),
-      ChangeNotifierProvider.value(value: musics),
       Provider.value(value: player),
-      Provider.value(value: store),
+      ChangeNotifierProvider.value(value: catalog),
+      Provider.value(value: stateStore),
     ],
     child: PrefService(
       service: prefService,
       child: MyApp(
         rootFolder: rootFolder,
-        hierarchy: musics,
+        catalog: catalog,
       ),
     ),
   ));
@@ -89,11 +92,11 @@ class MyApp extends StatefulWidget {
   const MyApp({
     super.key,
     required this.rootFolder,
-    required this.hierarchy,
+    required this.catalog,
   });
 
   final RootFolderNotifier rootFolder;
-  final MusicHierarchyNotifier hierarchy;
+  final Catalog catalog;
 
   @override
   State<MyApp> createState() => _MyAppState();
@@ -104,7 +107,12 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
     widget.rootFolder.addListener(_onRootChanged);
-    _onRootChanged();
+
+    // refresh catalog from disk without scanning
+    final root = widget.rootFolder.rootFolder?.path;
+    if (root != null) {
+      widget.catalog.refresh(root);
+    }
   }
 
   @override
@@ -116,7 +124,7 @@ class _MyAppState extends State<MyApp> {
   void _onRootChanged() {
     final root = widget.rootFolder.rootFolder;
     if (root != null) {
-      widget.hierarchy.rescan(root);
+      widget.catalog.scan(root);
     }
   }
 
