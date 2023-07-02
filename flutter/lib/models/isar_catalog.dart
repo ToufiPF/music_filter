@@ -1,11 +1,13 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:collection/collection.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_media_metadata/flutter_media_metadata.dart';
 import 'package:isar/isar.dart';
 import 'package:path/path.dart' as p;
 
+import '../misc.dart';
 import 'catalog.dart';
 import 'music.dart';
 
@@ -56,10 +58,11 @@ class IsarCatalog extends ChangeNotifier with Catalog {
 void _populateHierarchy(MusicFolder root, List<Music> musics) {
   final cache = <String, MusicFolder>{};
   for (var music in musics) {
-    final path = p.relative(music.path, from: root.path);
+    final path = music.path.removePrefix(root.path).removePrefix('/');
     MusicFolder folder = root;
     var part = "";
-    for (var split in p.split(p.dirname(path))) {
+    final splits = path.split('/');
+    for (var split in splits.slice(0, splits.length - 1)) {
       part = p.join(part, split);
       folder = cache.putIfAbsent(part, () {
         var tmp = MusicFolder(path: p.join(root.path, part), parent: folder);
@@ -75,6 +78,7 @@ void _populateHierarchy(MusicFolder root, List<Music> musics) {
 Stream<Music> _scanForMusics(Directory root) async* {
   await for (var file in root.list(recursive: true, followLinks: false)) {
     if (file is File) {
+      debugPrint("[_scanForMusics]: $file");
       final music = await _fetchTags(file);
       if (music != null) {
         yield music;

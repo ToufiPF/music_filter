@@ -76,7 +76,7 @@ class IsarStateStore with StateStore {
   @override
   Future<void> markAs(Music music, KeepState state) {
     final entry = MusicState(music.id, state);
-    return _states.put(entry);
+    return _states.isar.writeTxn(() => _states.put(entry));
   }
 
   @override
