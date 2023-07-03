@@ -1,20 +1,11 @@
-import 'dart:io';
-
 import 'package:flutter/widgets.dart';
 
 import 'music.dart';
 
+/// Catalog that can lists all musics under the root directory provided by [RootFolderNotifier].
+/// Refreshes automatically on creation & when [RootFolderNotifier] changes.
 mixin Catalog on ChangeNotifier {
-  /// Loads the given musics into the store.
-  /// Clears the previous list from the store.
-  /// The loaded musics are yielded by [allMusics]
-  Future<void> scan(Directory root);
-
-  /// This simply populates the store using cached state from disk.
-  /// Does not re-scan the folder at root.
-  Future<void> refresh(String root);
-
+  /// List of all musics in the configured root folder,
+  /// Includes the musics that were exported already
   List<Music> get allMusics;
-
-  MusicFolder? get hierarchy;
 }

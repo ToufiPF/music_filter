@@ -13,6 +13,7 @@ enum KeepState {
   deleted;
 }
 
+/// Exposes state of *explicitly* tracked musics
 mixin StateStore {
   /// Registers the given musics into the [StateStore]
   /// their default state is [KeepState.unspecified]

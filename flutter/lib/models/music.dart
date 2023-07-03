@@ -1,43 +1,26 @@
-import 'package:isar/isar.dart';
 import 'package:path/path.dart' as p;
 
-part 'music.g.dart';
-
 /// Model for a music file
-@collection
-class Music {
-  Music({
-    required this.path,
-    this.title,
-    this.album,
-    this.artists = const [],
-    this.albumArtist,
-  });
-
-  Id id = Isar.autoIncrement;
-
+mixin Music {
   /// Path to the music file
-  @Index(unique: true, caseSensitive: true)
-  final String path;
+  String get path;
 
   /// Title of the track
-  final String? title;
+  String? get title;
 
   /// Album of the track
-  final String? album;
+  String? get album;
 
   /// Artists of the track
-  final List<String> artists;
+  List<String> get artists;
 
   /// Artist of the album of the track
-  final String? albumArtist;
+  String? get albumArtist;
 
   /// Basename of the file, computed from [path]
-  @ignore
   String get filename => p.basenameWithoutExtension(path);
 
   /// String for displaying the music's artist(s)
-  @ignore
   String get displayArtist =>
       artists.isNotEmpty ? artists.join(", ") : albumArtist ?? "Unknown artist";
 
@@ -45,20 +28,18 @@ class Music {
   String toString() => "Music($path)";
 }
 
-class MusicFolder {
-  MusicFolder({required this.path, required this.parent});
-
+mixin MusicFolder {
   /// Path of the folder
-  final String path;
+  String get path;
 
   /// Parent music folder, or null if this folder is at the root
-  final MusicFolder? parent;
+  MusicFolder? get parent;
 
   /// Children music folder
-  final List<MusicFolder> folders = [];
+  List<MusicFolder> get folders;
 
   /// Direct children musics
-  final List<Music> musics = [];
+  List<Music> get musics;
 
   /// Whether this music folder is at the root of the hierarchy
   bool get isRoot => parent == null;
