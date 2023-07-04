@@ -1,8 +1,9 @@
+import 'package:collection/collection.dart';
 import 'package:path/path.dart' as p;
 
 /// Model for a music file
 mixin Music {
-  /// Path to the music file
+  /// Path to the music file, **relative to** the root
   String get path;
 
   /// Title of the track
@@ -29,14 +30,14 @@ mixin Music {
 }
 
 mixin MusicFolder {
-  /// Path of the folder
+  /// Path of the folder, **relative to** the root
   String get path;
 
   /// Parent music folder, or null if this folder is at the root
   MusicFolder? get parent;
 
   /// Children music folder
-  List<MusicFolder> get folders;
+  Map<String, MusicFolder> get folders;
 
   /// Direct children musics
   List<Music> get musics;
@@ -50,10 +51,20 @@ mixin MusicFolder {
   /// Collect the list of all musics under that folder (recursively)
   List<Music> get allDescendants {
     final list = musics.toList(growable: true);
-    for (var folder in folders) {
+    for (var folder in folders.values) {
       list.addAll(folder.allDescendants);
     }
     return list;
+  }
+
+  MusicFolder? lookup(String path) => _lookupSplits(path.split('/'));
+
+  MusicFolder? _lookupSplits(List<String> remSplits) {
+    if (remSplits.isEmpty) {
+      return this;
+    }
+    var folder = folders[remSplits.first];
+    return folder?._lookupSplits(remSplits.slice(1));
   }
 
   @override

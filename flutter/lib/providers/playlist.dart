@@ -1,8 +1,10 @@
 import 'package:flutter/widgets.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:just_audio_background/just_audio_background.dart';
+import 'package:path/path.dart' as p;
 
 import '../models/music.dart';
+import '../providers/root_folder.dart';
 
 /// Controller/Observer of the currently playing queue
 mixin PlayerQueueNotifier on ChangeNotifier {
@@ -23,12 +25,15 @@ mixin PlayerQueueNotifier on ChangeNotifier {
 }
 
 class JustAudioQueueNotifier extends ChangeNotifier with PlayerQueueNotifier {
+  JustAudioQueueNotifier(this.root);
+
   final ConcatenatingAudioSource _source =
       ConcatenatingAudioSource(children: []);
 
   /// TODO: use Isar id instead
   var idxCounter = 0;
   final List<Music> _currentQueue = [];
+  final RootFolderNotifier root;
 
   AudioSource get audioSource => _source;
 
@@ -68,7 +73,7 @@ class JustAudioQueueNotifier extends ChangeNotifier with PlayerQueueNotifier {
   AudioSource _musicToSource(Music music) {
     final id = idxCounter.toString();
     idxCounter += 1;
-    return AudioSource.file(music.path,
+    return AudioSource.file(p.join(root.rootFolder!.path, music.path),
         tag: MediaItem(
           id: id,
           title: music.title ?? music.filename,

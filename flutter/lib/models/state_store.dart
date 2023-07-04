@@ -31,10 +31,11 @@ mixin StateStore {
   /// Music should have been tracked with [startTracking] beforehand
   Future<void> markAs(Music music, KeepState state);
 
-  /// Stream with up-to-date musics with the given state
-  Stream<List<Music>> musicsForState(KeepState state);
-
   /// Returns a stream yielding the current state of the given music.
   /// Music should have been tracked with [startTracking] beforehand
   Stream<KeepState> watchState(Music music, {bool fireImmediately = true});
+
+  /// Stream with up-to-date musics with the given state
+  Stream<List<Music>> musicsForState(KeepState state,
+      {bool fireImmediately = true});
 }

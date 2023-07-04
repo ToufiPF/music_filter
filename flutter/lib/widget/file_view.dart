@@ -1,10 +1,10 @@
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
-import 'package:music_filter/models/state_store.dart';
 import 'package:provider/provider.dart';
 
 import '../models/catalog.dart';
 import '../models/music.dart';
+import '../models/state_store.dart';
 import '../providers/folders.dart';
 import '../providers/playlist.dart';
 import 'context_menu.dart';
@@ -90,7 +90,7 @@ class _FileViewState extends State<FileView> {
 
   (List<MusicFolder>, List<Music>) _getEntriesToShow(
       {required bool showHidden, required bool showEmpty}) {
-    final folders = current.folders
+    final folders = current.folders.values
         .where((e) => showHidden || !e.folderName.startsWith('.'))
         .where((e) => showEmpty || e.allDescendants.isNotEmpty)
         .sortedBy((e) => e.path);

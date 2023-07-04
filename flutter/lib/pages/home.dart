@@ -62,14 +62,14 @@ class _HomePageState extends State<HomePage> {
                 child: Text("Chose a folder"),
               ),
             );
-          } else if (musicRoot.hierarchy == null) {
+          } else if (musicRoot.toFilter == null) {
             return Column(children: [
               CircularProgressIndicator(),
               SizedBox(height: 16),
               Text("Scanning for musics..."),
             ]);
           } else {
-            return FileView(root: musicRoot.hierarchy!);
+            return FileView(root: musicRoot.toFilter!);
           }
         }),
       AvailableTab.queue => QueueView(),
