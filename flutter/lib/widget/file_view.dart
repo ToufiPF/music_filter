@@ -25,12 +25,12 @@ class _FileViewState extends State<FileView> {
 
   /// Actions that will popup when clicking on the "..." next to a file/folder item
   static const filePopupActions = [
-    MenuAction.addToPlaylist,
+    MenuAction.startFiltering,
     MenuAction.export,
     MenuAction.delete,
   ];
   static const dirPopupActions = [
-    MenuAction.addToPlaylist,
+    MenuAction.startFiltering,
     MenuAction.export,
     MenuAction.delete,
   ];
@@ -155,7 +155,7 @@ class _FileViewState extends State<FileView> {
     final store = Provider.of<StateStore>(context, listen: false);
 
     switch (action) {
-      case MenuAction.addToPlaylist:
+      case MenuAction.startFiltering:
         final musics = e.allDescendants;
         debugPrint("[$tag] Adding $musics to playlist");
         await playlist.appendAll(musics);
@@ -174,7 +174,7 @@ class _FileViewState extends State<FileView> {
     final store = Provider.of<StateStore>(context, listen: false);
 
     switch (action) {
-      case MenuAction.addToPlaylist:
+      case MenuAction.startFiltering:
         final musics = [e];
         debugPrint("[$tag] Adding $musics to playlist");
         await playlist.appendAll(musics);

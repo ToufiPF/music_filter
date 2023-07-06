@@ -1,15 +1,14 @@
-
 enum MenuAction {
-  addToPlaylist("Add to playlist"),
+  startFiltering("Start filtering"),
   removeFromPlaylist("Remove from playlist"),
   export("Export"),
-  delete("Delete");
+  restore("Restore"),
+  delete("Delete"),
+  ;
 
   const MenuAction(this.text);
 
   final String text;
 }
 
-class MusicContextMenu {
-
-}
+class MusicContextMenu {}
