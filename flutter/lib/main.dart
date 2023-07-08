@@ -58,7 +58,7 @@ Future<void> main() async {
   final Catalog catalog =
       VolatileCatalog(rootFolder); //IsarCatalog(isarDb: isar);
   final StateStore stateStore =
-      VolatileStateStore(); // IsarStateStore(isarDb: isar);
+      VolatileStateStore(rootFolder); // IsarStateStore(isarDb: isar);
 
   runApp(MultiProvider(
     providers: [
@@ -73,7 +73,7 @@ Future<void> main() async {
       ChangeNotifierProvider.value(value: playlist),
       Provider.value(value: player),
       ChangeNotifierProvider.value(value: catalog),
-      Provider.value(value: stateStore),
+      ChangeNotifierProvider.value(value: stateStore),
     ],
     child: PrefService(
       service: prefService,

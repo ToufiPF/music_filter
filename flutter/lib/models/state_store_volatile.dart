@@ -1,10 +1,18 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/widgets.dart';
+import 'package:intl/intl.dart';
+import 'package:path/path.dart' as p;
+
+import '../providers/root_folder.dart';
+import 'catalog_volatile.dart';
 import 'music.dart';
+import 'music_folder.dart';
 import 'state_store.dart';
 
-class VolatileStateStore with StateStore {
+class VolatileStateStore extends ChangeNotifier with StateStore {
+  static final DateFormat fmt = DateFormat("YYYYmmdd_HHMMss");
   final Map<String, KeepState> _states = {};
   final Map<String, List<StreamController<KeepState>>> _controllers = {};
 
@@ -12,8 +20,42 @@ class VolatileStateStore with StateStore {
   final Map<KeepState, List<StreamController<List<Music>>>> _musicsControllers =
       {};
 
+  final MutableMusicFolder _openHierarchy = VolatileMusicFolder("", null);
+
+  final RootFolderNotifier root;
+  File? _file;
+  IOSink? _sink;
+
+  VolatileStateStore(this.root) {
+    root.addListener(_onRootChanged);
+  }
+
   @override
-  Future<void> startTracking(List<Music> musics) async {
+  void dispose() {
+    root.removeListener(_onRootChanged);
+    super.dispose();
+  }
+
+  void _onRootChanged() async {
+    final folder = root.rootFolder;
+    if (folder != null) {
+      _file = File(p.join(folder.path, "export", fmt.format(DateTime.now())));
+      if (!await _file!.parent.exists()) {
+        await _file!.parent.create(recursive: true);
+      }
+      _sink = _file!.openWrite();
+    } else {
+      _file = null;
+      _sink?.close();
+      _sink = null;
+    }
+  }
+
+  @override
+  MusicFolder get openFoldersHierarchy => _openHierarchy;
+
+  @override
+  Future<void> startTracking(MusicFolder parent, List<Music> musics) async {
     const state = KeepState.unspecified;
     for (var music in musics) {
       _states.putIfAbsent(music.path, () => state);
@@ -23,15 +65,20 @@ class VolatileStateStore with StateStore {
     final updated = _musicsPerState.putIfAbsent(state, () => []);
     updated.addAll(musics);
     _musicsControllers[state]?.addForEach(updated);
+
+    final folder = _openHierarchy.lookupOrCreate(parent.path);
+    folder.addMusics(musics);
+
+    notifyListeners();
   }
 
   @override
-  Future<void> exportState(List<Music> musics, IOSink sink) {
+  Future<void> exportState(List<Music> musics) {
     for (var music in musics) {
       final state = _states[music.path] ?? KeepState.unspecified;
-      sink.writeln("${music.path}, $state");
+      _sink!.writeln("${music.path}, $state");
     }
-    return sink.flush();
+    return _sink!.flush();
   }
 
   @override
@@ -46,7 +93,11 @@ class VolatileStateStore with StateStore {
         }
       }
       _controllers.remove(music.path)?.forEach((e) => e.close());
+
+      final folder = _openHierarchy.lookup(File(music.path).parent.path);
+      folder?.addMusics([music]);
     }
+    notifyListeners();
   }
 
   @override

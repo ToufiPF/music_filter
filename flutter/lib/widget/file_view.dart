@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../models/catalog.dart';
 import '../models/music.dart';
+import '../models/music_folder.dart';
 import '../models/state_store.dart';
 import '../providers/folders.dart';
 import '../providers/playlist.dart';
@@ -90,7 +91,7 @@ class _FileViewState extends State<FileView> {
 
   (List<MusicFolder>, List<Music>) _getEntriesToShow(
       {required bool showHidden, required bool showEmpty}) {
-    final folders = current.folders.values
+    final folders = current.children
         .where((e) => showHidden || !e.folderName.startsWith('.'))
         .where((e) => showEmpty || e.allDescendants.isNotEmpty)
         .sortedBy((e) => e.path);
@@ -159,7 +160,7 @@ class _FileViewState extends State<FileView> {
         final musics = e.allDescendants;
         debugPrint("[$tag] Adding $musics to playlist");
         await playlist.appendAll(musics);
-        await store.startTracking(e.allDescendants);
+        await store.startTracking(e, e.allDescendants);
         break;
       case MenuAction.delete:
         break;
@@ -178,7 +179,7 @@ class _FileViewState extends State<FileView> {
         final musics = [e];
         debugPrint("[$tag] Adding $musics to playlist");
         await playlist.appendAll(musics);
-        await store.startTracking(musics);
+        await store.startTracking(current, musics);
         break;
       case MenuAction.delete:
         break;

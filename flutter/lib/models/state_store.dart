@@ -1,6 +1,9 @@
 import 'dart:io';
 
+import 'package:flutter/widgets.dart';
+
 import 'music.dart';
+import 'music_folder.dart';
 
 enum KeepState {
   /// default state, never explicitly kept or deleted
@@ -14,14 +17,17 @@ enum KeepState {
 }
 
 /// Exposes state of *explicitly* tracked musics
-mixin StateStore {
+mixin StateStore on ChangeNotifier {
+  /// List of musics currently tracked
+  MusicFolder get openFoldersHierarchy;
+
   /// Registers the given musics into the [StateStore]
   /// their default state is [KeepState.unspecified]
-  Future<void> startTracking(List<Music> musics);
+  Future<void> startTracking(MusicFolder parent, List<Music> musics);
 
   /// Dumps a (long) string that describes the state of the given musics
   /// to the given [IOSink], typically an open [File].
-  Future<void> exportState(List<Music> musics, IOSink sink);
+  Future<void> exportState(List<Music> musics);
 
   /// Stops tracking the state of the given musics.
   /// Stream obtained with [watchState] of these musics will close

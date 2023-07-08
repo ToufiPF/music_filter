@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:collection/collection.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_media_metadata/flutter_media_metadata.dart';
 import 'package:path/path.dart' as p;
@@ -7,6 +8,7 @@ import 'package:path/path.dart' as p;
 import '../providers/root_folder.dart';
 import 'catalog.dart';
 import 'music.dart';
+import 'music_folder.dart';
 
 class VolatileMusic with Music {
   VolatileMusic({
@@ -33,20 +35,75 @@ class VolatileMusic with Music {
   final String? albumArtist;
 }
 
-class VolatileMusicFolder with MusicFolder {
-  VolatileMusicFolder({required this.path, required this.parent});
+class VolatileMusicFolder with MusicFolder, MutableMusicFolder {
+  VolatileMusicFolder(this.path, this.parent);
+
+  final Map<String, VolatileMusicFolder> _folders = {};
+  final List<Music> _musics = [];
 
   @override
   final String path;
 
   @override
-  final MusicFolder? parent;
+  final VolatileMusicFolder? parent;
 
   @override
-  final Map<String, MusicFolder> folders = {};
+  List<VolatileMusicFolder> get children =>
+      _folders.values.toList(growable: false);
 
   @override
-  final List<Music> musics = [];
+  List<Music> get musics => _musics.toList(growable: false);
+
+  @override
+  void addMusics(Iterable<Music> musics) {
+    for (var m in musics) {
+      if (!_musics.contains(m)) {
+        _musics.add(m);
+      }
+    }
+  }
+
+  @override
+  void removeMusics(Iterable<Music> musics) {
+    for (var m in musics) {
+      _musics.remove(m);
+    }
+  }
+
+  @override
+  VolatileMusicFolder? detachFolder(String path) {
+    VolatileMusicFolder? toDetach = lookup(path);
+    toDetach?.parent?._folders.removeWhere((key, value) => value == toDetach);
+    return toDetach;
+  }
+
+  @override
+  VolatileMusicFolder? lookup(String path) =>
+      _lookupSplits('', path.split('/').slice(0), false);
+
+  @override
+  VolatileMusicFolder lookupOrCreate(String path) =>
+      _lookupSplits('', path.split('/').slice(0), true)!;
+
+  VolatileMusicFolder? _lookupSplits(
+      String prefix, List<String> splits, bool build) {
+    if (splits.isEmpty) {
+      return this;
+    }
+    final key = splits.first;
+    // TODO use slice() once
+    //  https://github.com/dart-lang/collection/issues/296 has been fixed
+    final remaining = splits.sublist(1);
+    if (build) {
+      prefix = p.join(prefix, key);
+      final child =
+          _folders.putIfAbsent(key, () => VolatileMusicFolder(prefix, this));
+      return child._lookupSplits(prefix, remaining, true);
+    } else {
+      final child = _folders[key];
+      return child?._lookupSplits(prefix, remaining, false);
+    }
+  }
 }
 
 class VolatileCatalog extends ChangeNotifier with Catalog {
@@ -54,8 +111,8 @@ class VolatileCatalog extends ChangeNotifier with Catalog {
   static const String recycleBinName = "\$.RecycleBin";
 
   List<Music> _cache = [];
-  MusicFolder? _toFilterRoot;
-  MusicFolder? _recycledRoot;
+  VolatileMusicFolder? _toFilterRoot;
+  VolatileMusicFolder? _recycledRoot;
 
   final RootFolderNotifier notifier;
 
@@ -94,7 +151,7 @@ class VolatileCatalog extends ChangeNotifier with Catalog {
       _toFilterRoot = await toFilterRoot;
       _recycledRoot = await recycledRoot;
       debugPrint(
-          "[$tag]: Scanning done: $toFilterRoot has ${toFilter.length} musics");
+          "[$tag]: Scanning done: $_toFilterRoot has ${toFilter.length} musics");
       notifyListeners();
     } else {
       _cache.clear();
@@ -103,9 +160,13 @@ class VolatileCatalog extends ChangeNotifier with Catalog {
     }
   }
 
-  Future<MusicFolder> _scan(String basePath, MusicFolder? parent,
-      List<Music> scanned, Directory folder) async {
-    var newFolder = makeFolder(basePath, parent);
+  Future<VolatileMusicFolder> _scan(
+    String basePath,
+    VolatileMusicFolder? parent,
+    List<Music> scanned,
+    Directory folder,
+  ) async {
+    var newFolder = VolatileMusicFolder(basePath, parent);
     await for (var e in folder.list(recursive: false, followLinks: false)) {
       final name = p.basename(e.path);
       final path = p.join(basePath, name);
@@ -116,20 +177,17 @@ class VolatileCatalog extends ChangeNotifier with Catalog {
         }
 
         final sub = await _scan(path, newFolder, scanned, e);
-        newFolder.folders[name] = sub;
+        newFolder._folders[name] = sub;
       } else if (e is File) {
         final music = await fetchTags(e, path);
         if (music != null) {
-          newFolder.musics.add(music);
+          newFolder._musics.add(music);
           scanned.add(music);
         }
       }
     }
     return newFolder;
   }
-
-  MusicFolder makeFolder(String path, MusicFolder? parent) =>
-      VolatileMusicFolder(path: path, parent: parent);
 
   Future<Music?> fetchTags(File file, String path) async {
     final metadata = await MetadataRetriever.fromFile(file);
