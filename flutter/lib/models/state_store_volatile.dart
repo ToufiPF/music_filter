@@ -23,7 +23,6 @@ class VolatileStateStore extends ChangeNotifier with StateStore {
   final MutableMusicFolder _openHierarchy = VolatileMusicFolder("", null);
 
   final RootFolderNotifier root;
-  File? _file;
   IOSink? _sink;
 
   VolatileStateStore(this.root) {
@@ -39,14 +38,14 @@ class VolatileStateStore extends ChangeNotifier with StateStore {
   void _onRootChanged() async {
     final folder = root.rootFolder;
     if (folder != null) {
-      _file = File(p.join(folder.path, "export", fmt.format(DateTime.now())));
-      if (!await _file!.parent.exists()) {
-        await _file!.parent.create(recursive: true);
+      final file = File(p.join(folder.path, "export.csv"));
+      if (!await file.parent.exists()) {
+        await file.parent.create(recursive: true);
       }
-      _sink = _file!.openWrite();
+      _sink = file.openWrite(mode: FileMode.writeOnlyAppend);
     } else {
-      _file = null;
-      _sink?.close();
+      await _sink?.flush();
+      await _sink?.close();
       _sink = null;
     }
   }
