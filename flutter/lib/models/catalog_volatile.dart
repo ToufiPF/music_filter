@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:collection/collection.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_media_metadata/flutter_media_metadata.dart';
 import 'package:path/path.dart' as p;
@@ -78,12 +77,14 @@ class VolatileMusicFolder with MusicFolder, MutableMusicFolder {
   }
 
   @override
-  VolatileMusicFolder? lookup(String path) =>
-      _lookupSplits('', path.split('/').slice(0), false);
+  VolatileMusicFolder? lookup(String path) => path.isEmpty || path == "."
+      ? this
+      : _lookupSplits('', path.split('/'), false);
 
   @override
-  VolatileMusicFolder lookupOrCreate(String path) =>
-      _lookupSplits('', path.split('/').slice(0), true)!;
+  VolatileMusicFolder lookupOrCreate(String path) => path.isEmpty || path == "."
+      ? this
+      : _lookupSplits('', path.split('/'), true)!;
 
   VolatileMusicFolder? _lookupSplits(
       String prefix, List<String> splits, bool build) {

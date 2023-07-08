@@ -5,6 +5,7 @@ import 'music.dart';
 typedef MusicFolderFactory = MusicFolder Function(
     String path, MusicFolder? parent);
 
+// TODO lookup/add/remove tests
 mixin MusicFolder {
   /// Path of the folder, **relative to** the root
   String get path;
@@ -39,6 +40,21 @@ mixin MusicFolder {
 
   @override
   String toString() => "MusicFolder($path, parent: ${parent?.path})";
+
+  String debugToString({int depth = 0}) {
+    final buffer = StringBuffer();
+    buffer.write("  " * depth);
+    buffer.writeln(folderName);
+    final nextDepth = depth + 1;
+    for (var f in children) {
+      buffer.write(f.debugToString(depth: nextDepth));
+    }
+    for (var m in musics) {
+      buffer.write("  " * nextDepth);
+      buffer.writeln(m.filename);
+    }
+    return buffer.toString();
+  }
 }
 
 mixin MutableMusicFolder on MusicFolder {
