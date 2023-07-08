@@ -26,6 +26,12 @@ mixin Music {
       artists.isNotEmpty ? artists.join(", ") : albumArtist ?? "Unknown artist";
 
   @override
+  bool operator ==(Object other) => other is Music && path == other.path;
+
+  @override
+  int get hashCode => path.hashCode;
+
+  @override
   String toString() => "Music($path)";
 }
 
