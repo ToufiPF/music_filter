@@ -67,9 +67,8 @@ class VolatileStateStore extends ChangeNotifier with StateStore {
     updated.addAll(musics);
     _musicsControllers[state]?.addForEach(updated);
 
-    final folder = _openHierarchy.lookupOrCreate(parent.path);
-    folder.addMusics(musics);
-
+    final folder = await _openHierarchy.lookupOrCreate(parent.path);
+    await folder.addMusics(musics);
     notifyListeners();
   }
 
@@ -96,7 +95,7 @@ class VolatileStateStore extends ChangeNotifier with StateStore {
       _controllers.remove(music.path)?.forEach((e) => e.close());
 
       final folder = _openHierarchy.lookup(File(music.path).parent.path);
-      folder?.addMusics([music]);
+      await folder?.addMusics([music]);
     }
     notifyListeners();
   }

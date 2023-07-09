@@ -145,6 +145,10 @@ class VolatileCatalog extends ChangeNotifier with Catalog {
 
       await _removeEmptyFolders(baseDir.path, from.parent);
     }
+
+    await _toFilterRoot?.removeMusics(musics);
+    await _recycledRoot?.addMusics(musics);
+    notifyListeners();
   }
 
   @override
@@ -161,6 +165,10 @@ class VolatileCatalog extends ChangeNotifier with Catalog {
 
       await _removeEmptyFolders(recycledDir.path, from.parent);
     }
+
+    await _toFilterRoot?.addMusics(musics);
+    await _recycledRoot?.removeMusics(musics);
+    notifyListeners();
   }
 
   Future<void> _removeEmptyFolders(

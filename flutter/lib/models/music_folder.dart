@@ -71,12 +71,12 @@ mixin MutableMusicFolder on MusicFolder {
 
   /// Searches down the tree hierarchy and returns the folder,
   /// creating it and all its ancestors if they do not exist
-  MutableMusicFolder lookupOrCreate(String path);
+  Future<MutableMusicFolder> lookupOrCreate(String path);
 
   /// Looks up the folder and detaches it if it exists
-  MusicFolder? detachFolder(String path);
+  Future<MusicFolder?> detachFolder(String path);
 
-  void addMusics(Iterable<Music> musics);
+  Future<void> addMusics(Iterable<Music> musics);
 
-  void removeMusics(Iterable<Music> musics);
+  Future<void> removeMusics(Iterable<Music> musics);
 }
