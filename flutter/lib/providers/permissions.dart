@@ -141,9 +141,8 @@ class PermissionsNotifier extends ChangeNotifier with WidgetsBindingObserver {
 
   List<ph.Permission> _getPermissionsFor(PermissionGroup p) => switch (p) {
         PermissionGroup.storage => isAndroidQ
-        // ? const [ph.Permission.audio, ph.Permission.manageExternalStorage]
-        // ? const [ph.Permission.audio, ph.Permission.storage]
-            ? const [ph.Permission.audio]
+            ? const [ph.Permission.audio, ph.Permission.manageExternalStorage]
+            // ? const [ph.Permission.audio]
             : const [ph.Permission.storage],
         PermissionGroup.notif => const [ph.Permission.notification],
       };
