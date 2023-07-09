@@ -36,7 +36,7 @@ Future<void> main() async {
   );
   debugPrint("Preferences: ${prefService.getKeys()}");
 
-  final permissions = PermissionsNotifier();
+  final permissions = await PermissionsNotifier.initialize();
   WidgetsBinding.instance.addObserver(permissions);
 
   final rootFolder = RootFolderNotifier(
@@ -110,10 +110,7 @@ class MyApp extends StatelessWidget {
           });
 
   Widget _initialPage(BuildContext context) {
-    const required = [
-      // PermissionGroup.storage,
-      PermissionGroup.media,
-    ];
+    const required = [PermissionGroup.storage];
 
     return Consumer<PermissionsNotifier>(
         builder: (context, perm, child) => perm
