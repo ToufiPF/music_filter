@@ -102,14 +102,20 @@ class VolatileCatalog extends ChangeNotifier with Catalog {
   }
 
   Future<Music?> fetchTags(File file, String path) async {
-    final metadata = await MetadataRetriever.fromFile(file);
-    return VolatileMusic(
-      path: path,
-      title: metadata.trackName,
-      artists: metadata.trackArtistNames ?? [],
-      album: metadata.albumName,
-      albumArtist: metadata.albumArtistName,
-    );
+    try {
+      final metadata =
+          await MetadataRetriever.fromFile(file).timeout(Duration(seconds: 1));
+      return VolatileMusic(
+        path: path,
+        title: metadata.trackName,
+        artists: metadata.trackArtistNames ?? [],
+        album: metadata.albumName,
+        albumArtist: metadata.albumArtistName,
+      );
+    } catch (e) {
+      debugPrint("[$tag]_fetchTag($path) caught error: $e");
+      return null;
+    }
   }
 
   @override
