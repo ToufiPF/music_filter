@@ -27,6 +27,7 @@ class VolatileStateStore extends ChangeNotifier with StateStore {
 
   VolatileStateStore(this.root) {
     root.addListener(_onRootChanged);
+    _onRootChanged();
   }
 
   @override
