@@ -6,9 +6,9 @@ import 'package:intl/intl.dart';
 import 'package:path/path.dart' as p;
 
 import '../providers/root_folder.dart';
-import 'catalog_volatile.dart';
 import 'music.dart';
 import 'music_folder.dart';
+import 'music_folder_volatile.dart';
 import 'state_store.dart';
 
 class VolatileStateStore extends ChangeNotifier with StateStore {

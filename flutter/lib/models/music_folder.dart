@@ -5,6 +5,14 @@ import 'music.dart';
 typedef MusicFolderFactory = MusicFolder Function(
     String path, MusicFolder? parent);
 
+abstract class MusicFolderBuilder<Folder extends MusicFolder> {
+  Folder get root;
+
+  Folder addSubfolder(Folder parent, String childPath);
+
+  void addMusics(Folder owner, List<Music> musics);
+}
+
 // TODO lookup/add/remove tests
 mixin MusicFolder {
   /// Path of the folder, **relative to** the root
