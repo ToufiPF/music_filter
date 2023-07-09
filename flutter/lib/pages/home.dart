@@ -6,10 +6,10 @@ import '../providers/active_tabs.dart';
 import '../providers/root_folder.dart';
 import '../settings/active_tabs.dart';
 import '../settings/settings.dart';
-import '../widget/file_view.dart';
-import '../widget/open_folder_view.dart';
-import '../widget/player_widget.dart';
-import '../widget/queue_view.dart';
+import '../widgets/file_view.dart';
+import '../widgets/open_folder_view.dart';
+import '../widgets/player_widget.dart';
+import '../widgets/queue_view.dart';
 
 /// Home page for the app
 class HomePage extends StatefulWidget {
