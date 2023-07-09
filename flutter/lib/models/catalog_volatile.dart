@@ -142,6 +142,8 @@ class VolatileCatalog extends ChangeNotifier with Catalog {
         }
         await from.rename(to.path);
       }
+
+      await _removeEmptyFolders(baseDir.path, from.parent);
     }
   }
 
@@ -156,6 +158,23 @@ class VolatileCatalog extends ChangeNotifier with Catalog {
         }
         await from.rename(to.path);
       }
+
+      await _removeEmptyFolders(recycledDir.path, from.parent);
+    }
+  }
+
+  Future<void> _removeEmptyFolders(
+      String upperDir, Directory toDeleteIfEmpty) async {
+    if (toDeleteIfEmpty.path == upperDir) {
+      return;
+    }
+
+    final empty = await toDeleteIfEmpty
+        .list(recursive: false, followLinks: false)
+        .isEmpty;
+    if (empty) {
+      await toDeleteIfEmpty.delete(recursive: false);
+      await _removeEmptyFolders(upperDir, toDeleteIfEmpty.parent);
     }
   }
 }
