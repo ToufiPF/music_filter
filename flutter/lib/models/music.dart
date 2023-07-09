@@ -1,80 +1,35 @@
-import 'package:isar/isar.dart';
 import 'package:path/path.dart' as p;
 
-part 'music.g.dart';
-
 /// Model for a music file
-@collection
-class Music {
-  Music({
-    required this.path,
-    this.title,
-    this.album,
-    this.artists = const [],
-    this.albumArtist,
-  });
-
-  Id id = Isar.autoIncrement;
-
-  /// Path to the music file
-  @Index(unique: true, caseSensitive: true)
-  final String path;
+mixin Music {
+  /// Path to the music file, **relative to** the root
+  String get path;
 
   /// Title of the track
-  final String? title;
+  String? get title;
 
   /// Album of the track
-  final String? album;
+  String? get album;
 
   /// Artists of the track
-  final List<String> artists;
+  List<String> get artists;
 
   /// Artist of the album of the track
-  final String? albumArtist;
+  String? get albumArtist;
 
   /// Basename of the file, computed from [path]
-  @ignore
   String get filename => p.basenameWithoutExtension(path);
 
   /// String for displaying the music's artist(s)
-  @ignore
   String get displayArtist =>
       artists.isNotEmpty ? artists.join(", ") : albumArtist ?? "Unknown artist";
 
   @override
-  String toString() => "Music($path)";
-}
-
-class MusicFolder {
-  MusicFolder({required this.path, required this.parent});
-
-  /// Path of the folder
-  final String path;
-
-  /// Parent music folder, or null if this folder is at the root
-  final MusicFolder? parent;
-
-  /// Children music folder
-  final List<MusicFolder> folders = [];
-
-  /// Direct children musics
-  final List<Music> musics = [];
-
-  /// Whether this music folder is at the root of the hierarchy
-  bool get isRoot => parent == null;
-
-  /// Base name of this folder
-  String get folderName => p.basename(path);
-
-  /// Collect the list of all musics under that folder (recursively)
-  List<Music> get allDescendants {
-    final list = musics.toList(growable: true);
-    for (var folder in folders) {
-      list.addAll(folder.allDescendants);
-    }
-    return list;
-  }
+  bool operator ==(Object other) => other is Music && path == other.path;
 
   @override
-  String toString() => "MusicFolder($path, parent: ${parent?.path})";
+  int get hashCode => path.hashCode;
+
+  @override
+  String toString() => "Music($path)";
 }

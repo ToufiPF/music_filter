@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../models/music.dart';
+import '../models/music_folder.dart';
 import 'music_list_view.dart';
 
 class MusicFolderListView extends StatefulWidget {

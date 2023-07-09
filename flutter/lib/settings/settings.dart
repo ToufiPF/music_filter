@@ -2,7 +2,9 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:pref/pref.dart';
+import 'package:provider/provider.dart';
 
+import '../models/catalog.dart';
 import 'active_tabs.dart';
 
 enum Pref {
@@ -70,6 +72,14 @@ class SettingsPage extends StatelessWidget {
             pref: Pref.showHiddenFiles.name,
             title: Text("Show hidden files"),
           ),
+          PrefButton(
+            child: Text("Restore musics in recycle bin"),
+            onTap: () {
+              // TODO: should erase stuff from csv to be consistent
+              final catalog = Provider.of<Catalog>(context, listen: false);
+              catalog.restore(catalog.recycleBin?.allDescendants ?? []);
+            },
+          )
         ],
       );
 }

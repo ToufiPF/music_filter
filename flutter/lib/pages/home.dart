@@ -2,16 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../models/catalog.dart';
-import '../models/music.dart';
-import '../models/state_store.dart';
 import '../providers/active_tabs.dart';
 import '../providers/root_folder.dart';
 import '../settings/active_tabs.dart';
 import '../settings/settings.dart';
-import '../widget/file_view.dart';
-import '../widget/music_list_view.dart';
-import '../widget/player_widget.dart';
-import '../widget/queue_view.dart';
+import '../widgets/file_view.dart';
+import '../widgets/open_folder_view.dart';
+import '../widgets/player_widget.dart';
+import '../widgets/queue_view.dart';
 
 /// Home page for the app
 class HomePage extends StatefulWidget {
@@ -49,54 +47,31 @@ class _HomePageState extends State<HomePage> {
             ));
   }
 
-  Widget _bodyForTab(BuildContext context, AvailableTab tab) {
-    final store = Provider.of<StateStore>(context, listen: false);
-
-    return switch (tab) {
-      AvailableTab.folder => Consumer2<RootFolderNotifier, Catalog>(
-            builder: (context, rootPicker, musicRoot, child) {
-          if (rootPicker.rootFolder == null) {
-            return Center(
-              child: ElevatedButton(
-                onPressed: () => rootPicker.pickFolder(null),
-                child: Text("Chose a folder"),
-              ),
-            );
-          } else if (musicRoot.hierarchy == null) {
-            return Column(children: [
-              CircularProgressIndicator(),
-              SizedBox(height: 16),
-              Text("Scanning for musics..."),
-            ]);
-          } else {
-            return FileView(root: musicRoot.hierarchy!);
-          }
-        }),
-      AvailableTab.queue => QueueView(),
-      // Must wrap in builder to re-generate a stream each time this widget is shown,
-      // otherwise changing tab disposes of the widget and cancels the stream
-      // => bad state stream already listened to
-      AvailableTab.keptMusics => Builder(
-          builder: (context) => StreamBuilder<List<Music>>(
-                initialData: [],
-                stream: store.musicsForState(KeepState.kept),
-                builder: (context, snapshot) => MusicListView(
-                  musics: snapshot.data!,
-                  popupActions: [],
-                  onSelected: (context, musicIdx, action) {},
+  Widget _bodyForTab(BuildContext context, AvailableTab tab) => switch (tab) {
+        AvailableTab.folder => Consumer2<RootFolderNotifier, Catalog>(
+              builder: (context, rootPicker, musicRoot, child) {
+            if (rootPicker.rootFolder == null) {
+              return Center(
+                child: ElevatedButton(
+                  onPressed: () => rootPicker.pickFolder(null),
+                  child: Text("Chose a folder"),
                 ),
-              )),
-      AvailableTab.deletedMusics => Builder(
-          builder: (context) => StreamBuilder<List<Music>>(
-                initialData: [],
-                stream: store.musicsForState(KeepState.deleted),
-                builder: (context, snapshot) => MusicListView(
-                  musics: snapshot.data!,
-                  popupActions: [],
-                  onSelected: (context, musicIdx, action) {},
-                ),
-              )),
-      AvailableTab.settings => SettingsPage(),
-    };
-  }
+              );
+            } else if (musicRoot.toFilter == null) {
+              return const Column(children: [
+                CircularProgressIndicator(),
+                SizedBox(height: 16),
+                Text("Scanning for musics..."),
+              ]);
+            } else {
+              return FileView(root: musicRoot.toFilter!);
+            }
+          }),
+        AvailableTab.queue => QueueView(),
+        // Must wrap in builder to re-generate a stream each time this widget is shown,
+        // otherwise changing tab disposes of the widget and cancels the stream
+        // => bad state stream already listened to
+        AvailableTab.openMusics => OpenMusicView(),
+        AvailableTab.settings => SettingsPage(),
+      };
 }

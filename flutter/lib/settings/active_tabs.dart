@@ -23,20 +23,12 @@ enum AvailableTab {
     iconSelected: Icons.queue_music,
     alwaysActive: false,
   ),
-  keptMusics(
-    id: "kept_musics",
-    label: "Kept",
-    appBarTitle: "Kept musics",
+  openMusics(
+    id: "open_musics",
+    label: "Open",
+    appBarTitle: "Open folders",
     iconDefault: Icons.music_note_outlined,
     iconSelected: Icons.music_note,
-    alwaysActive: false,
-  ),
-  deletedMusics(
-    id: "deleted_musics",
-    label: "Deleted",
-    appBarTitle: "Deleted musics",
-    iconDefault: Icons.music_off_outlined,
-    iconSelected: Icons.music_off,
     alwaysActive: false,
   ),
   settings(
