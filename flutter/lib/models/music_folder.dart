@@ -13,8 +13,7 @@ abstract class MusicFolderBuilder<Folder extends MusicFolder> {
   void addMusics(Folder owner, List<Music> musics);
 }
 
-// TODO lookup/add/remove tests
-mixin MusicFolder {
+abstract class MusicFolder {
   /// Path of the folder, **relative to** the root
   String get path;
 
@@ -32,6 +31,10 @@ mixin MusicFolder {
 
   /// Base name of this folder
   String get folderName => p.basename(path);
+
+  bool get isEmpty => children.isEmpty && musics.isEmpty;
+
+  bool get isNotEmpty => !isEmpty;
 
   /// Collect the list of all musics under that folder (recursively)
   List<Music> get allDescendants {
@@ -76,7 +79,12 @@ mixin MutableMusicFolder on MusicFolder {
   /// Looks up the folder and detaches it if it exists
   Future<MusicFolder?> detachFolder(String path);
 
+  /// For each music, walks the tree, creates folders if needed
+  /// and attaches the musics where they should be
   Future<void> addMusics(Iterable<Music> musics);
 
+  /// For each music, walks the tree, finds the folder
+  /// that should be containing it and removes it.
+  /// Also cleans up empty folders.
   Future<void> removeMusics(Iterable<Music> musics);
 }

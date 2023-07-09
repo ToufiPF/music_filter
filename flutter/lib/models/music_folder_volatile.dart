@@ -1,9 +1,12 @@
+import 'dart:collection';
+import 'dart:io';
+
 import 'package:path/path.dart' as p;
 
 import 'music.dart';
 import 'music_folder.dart';
 
-class VolatileMusic with Music {
+class VolatileMusic extends Music {
   VolatileMusic({
     required this.path,
     this.title,
@@ -47,11 +50,11 @@ class VolatileMusicFolderBuilder
   }
 }
 
-class VolatileMusicFolder with MusicFolder, MutableMusicFolder {
+class VolatileMusicFolder extends MusicFolder with MutableMusicFolder {
   VolatileMusicFolder(this.path, this.parent);
 
   final Map<String, VolatileMusicFolder> _folders = {};
-  final List<Music> _musics = [];
+  final SplayTreeSet<Music> _musics = SplayTreeSet();
 
   @override
   final String path;
@@ -69,16 +72,22 @@ class VolatileMusicFolder with MusicFolder, MutableMusicFolder {
   @override
   Future<void> addMusics(Iterable<Music> musics) async {
     for (var m in musics) {
-      if (!_musics.contains(m)) {
-        _musics.add(m);
-      }
+      final path = File(m.path).parent.path;
+      final folder = await lookupOrCreate(path);
+      folder._musics.add(m);
     }
   }
 
   @override
   Future<void> removeMusics(Iterable<Music> musics) async {
     for (var m in musics) {
-      _musics.remove(m);
+      final path = File(m.path).parent.path;
+      var folder = lookup(path);
+      folder?._musics.remove(m);
+      while (folder != null && folder.isEmpty) {
+        folder.parent?._folders.remove(folder.folderName);
+        folder = folder.parent;
+      }
     }
   }
 

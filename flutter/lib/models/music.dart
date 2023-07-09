@@ -1,7 +1,7 @@
 import 'package:path/path.dart' as p;
 
 /// Model for a music file
-mixin Music {
+abstract class Music implements Comparable<Music> {
   /// Path to the music file, **relative to** the root
   String get path;
 
@@ -29,6 +29,9 @@ mixin Music {
 
   @override
   int get hashCode => path.hashCode;
+
+  @override
+  int compareTo(Music other) => path.compareTo(other.path);
 
   @override
   String toString() => "Music($path)";
