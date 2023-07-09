@@ -80,18 +80,8 @@ class QueueView extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.end,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                IconButton(
-                  onPressed: snapshot.data != KeepState.kept
-                      ? () => store.markAs(music, KeepState.kept)
-                      : null,
-                  icon: Icon(Icons.save),
-                ),
-                IconButton(
-                  onPressed: snapshot.data != KeepState.deleted
-                      ? () => store.markAs(music, KeepState.deleted)
-                      : null,
-                  icon: Icon(Icons.delete_forever),
-                ),
+                IconActions.keptMusicAction(context, music, snapshot.data!),
+                IconActions.deleteMusicAction(context, music, snapshot.data!),
                 PopupMenuButton<int>(
                   child: Icon(Icons.more_vert, size: 32),
                   itemBuilder: (context) => [

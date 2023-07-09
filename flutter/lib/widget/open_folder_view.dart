@@ -1,11 +1,11 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:music_filter/models/music_folder.dart';
 import 'package:provider/provider.dart';
 
 import '../models/catalog.dart';
 import '../models/state_store.dart';
+import 'context_menu.dart';
 
 class OpenMusicView extends StatefulWidget {
   const OpenMusicView({super.key});
@@ -45,7 +45,7 @@ class _OpenMusicViewState extends State<OpenMusicView> {
               return ListTile(
                 title: Text(folder.folderName),
                 onTap: () => setState(() => path = folder.path),
-                trailing: _uploadIconButton(catalog, store, toDisplay),
+                trailing: IconActions.exportActionFolder(context, folder),
               );
             } else {
               idx -= toDisplay.children.length;
@@ -56,24 +56,15 @@ class _OpenMusicViewState extends State<OpenMusicView> {
                     initialData: KeepState.unspecified,
                     stream: store.watchState(music, fireImmediately: true),
                     builder: (context, snapshot) {
+                      final state = snapshot.data!;
                       return Row(
                         mainAxisSize: MainAxisSize.min,
                         mainAxisAlignment: MainAxisAlignment.end,
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          IconButton(
-                            onPressed: snapshot.data != KeepState.kept
-                                ? () => store.markAs(music, KeepState.kept)
-                                : null,
-                            icon: Icon(Icons.save),
-                          ),
-                          IconButton(
-                            onPressed: snapshot.data != KeepState.deleted
-                                ? () => store.markAs(music, KeepState.deleted)
-                                : null,
-                            icon: Icon(Icons.delete_forever),
-                          ),
-                          _uploadIconButton(catalog, store, toDisplay),
+                          IconActions.keptMusicAction(context, music, state),
+                          IconActions.deleteMusicAction(context, music, state),
+                          IconActions.exportActionMusic(context, music, state),
                         ],
                       );
                     }),
@@ -84,18 +75,4 @@ class _OpenMusicViewState extends State<OpenMusicView> {
       }),
     );
   }
-
-  Widget _uploadIconButton(
-    Catalog catalog,
-    StateStore store,
-    MusicFolder toDisplay,
-  ) =>
-      IconButton(
-          icon: Icon(Icons.upload),
-          onPressed: () async {
-            final musics = toDisplay.allDescendants;
-            await store.exportState(musics);
-            await store.discardState(musics);
-            await catalog.markAsExported(musics);
-          });
 }
