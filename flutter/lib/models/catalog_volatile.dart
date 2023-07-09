@@ -104,7 +104,7 @@ class VolatileCatalog extends ChangeNotifier with Catalog {
   Future<Music?> fetchTags(File file, String path) async {
     try {
       final metadata =
-          await MetadataRetriever.fromFile(file).timeout(Duration(seconds: 1));
+          await MetadataRetriever.fromFile(file).timeout(Duration(seconds: 5));
       return VolatileMusic(
         path: path,
         title: metadata.trackName,

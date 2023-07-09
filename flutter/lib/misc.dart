@@ -10,4 +10,7 @@ extension IntExtensions on int {
 extension StringExtensions on String {
   String removePrefix(String prefix) =>
       startsWith(prefix) ? substring(prefix.length) : this;
+
+  String escapeDoubleQuotes() =>
+      replaceAll('"', '\\"');
 }

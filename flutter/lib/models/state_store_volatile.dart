@@ -5,6 +5,7 @@ import 'package:flutter/widgets.dart';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart' as p;
 
+import '../misc.dart';
 import '../providers/root_folder.dart';
 import 'music.dart';
 import 'music_folder.dart';
@@ -76,7 +77,7 @@ class VolatileStateStore extends ChangeNotifier with StateStore {
   Future<void> exportState(List<Music> musics) {
     for (var music in musics) {
       final state = _states[music.path] ?? KeepState.unspecified;
-      _sink!.writeln("${music.path}, $state");
+      _sink!.writeln("\"${music.path.escapeDoubleQuotes()}\", $state");
     }
     return _sink!.flush();
   }

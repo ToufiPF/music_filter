@@ -14,6 +14,13 @@ enum KeepState {
 
   /// user marked the music as deleted
   deleted;
+
+  @override
+  String toString() => switch (this) {
+        KeepState.kept => "kept",
+        KeepState.deleted => "deleted",
+        KeepState.unspecified => "unspecified",
+      };
 }
 
 /// Exposes state of *explicitly* tracked musics
