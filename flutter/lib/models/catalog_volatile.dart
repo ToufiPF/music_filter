@@ -39,6 +39,7 @@ class VolatileCatalog extends ChangeNotifier with Catalog {
   Directory get recycledDir =>
       Directory(p.join(notifier.rootFolder!.path, recycleBinName));
 
+  @override
   Future<void> rescan() async {
     final root = notifier.rootFolder;
     debugPrint("[$tag]: Rescanning $root...");
@@ -61,8 +62,7 @@ class VolatileCatalog extends ChangeNotifier with Catalog {
       _cache = toFilter + recycled;
       _toFilterRoot = toFilterBuilder.root;
       _recycledRoot = recycledBuilder.root;
-      debugPrint(
-          "[$tag]: Scanning done: $_toFilterRoot has ${toFilter.length} musics");
+      debugPrint(_toFilterRoot!.debugToString());
       notifyListeners();
     } else {
       _cache.clear();
@@ -86,7 +86,7 @@ class VolatileCatalog extends ChangeNotifier with Catalog {
       final path = p.join(basePath, name);
       if (e is Directory) {
         // skip the recycleBin, 1st child of the root folder, if it exists
-        if (basePath == "" && name == recycleBinName) {
+        if (basePath.isEmpty && name == recycleBinName) {
           continue;
         }
 
