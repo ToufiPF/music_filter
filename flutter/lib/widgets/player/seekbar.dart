@@ -13,19 +13,17 @@ class SeekBarWrapper extends StatelessWidget {
   Widget build(BuildContext context) {
     final player = Provider.of<PlayerStateController>(context, listen: false);
 
-    return StreamBuilder(
-        initialData: Duration.zero,
+    // currentMusicDurationStream yields nullable Durations
+    return StreamBuilder<Duration?>(
         stream: player.currentMusicDurationStream,
-        builder: (_, duration) => StreamBuilder(
-            initialData: Duration.zero,
+        builder: (_, duration) => StreamBuilder<Duration>(
             stream: player.playerBufferedPositionStream,
-            builder: (context, buffered) => StreamBuilder(
-                initialData: Duration.zero,
+            builder: (_, buffered) => StreamBuilder<Duration>(
                 stream: player.playerPositionStream,
-                builder: (context, position) => SeekBar(
-                      duration: duration.data!,
-                      bufferedPosition: buffered.data!,
-                      position: position.data!,
+                builder: (_, position) => SeekBar(
+                      duration: duration.data ?? Duration.zero,
+                      bufferedPosition: buffered.data ?? Duration.zero,
+                      position: position.data ?? Duration.zero,
                       // onChanged: (position) {
                       //   if (position < buffered.data!) {
                       //     player.seekTo(position);
