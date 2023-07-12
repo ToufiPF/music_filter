@@ -63,7 +63,8 @@ def run_directives(input_dir: 'Path', output_dir: 'Path', directives: 'dict[Path
 
         proceed = prompt_for_proceed()
         if proceed:
-            for p in dropped:
+            for relative in directives.keys():
+                p = input_dir / relative
                 p.unlink(missing_ok=True)
                 while p != input_dir and next(p.parent.iterdir(), None) is None:
                     p = p.parent
