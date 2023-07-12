@@ -1,9 +1,12 @@
+import 'dart:collection';
+import 'dart:io';
+
 import 'package:path/path.dart' as p;
 
 import 'music.dart';
 import 'music_folder.dart';
 
-class VolatileMusic with Music {
+class VolatileMusic extends Music {
   VolatileMusic({
     required this.path,
     this.title,
@@ -47,11 +50,11 @@ class VolatileMusicFolderBuilder
   }
 }
 
-class VolatileMusicFolder with MusicFolder, MutableMusicFolder {
+class VolatileMusicFolder extends MusicFolder with MutableMusicFolder {
   VolatileMusicFolder(this.path, this.parent);
 
   final Map<String, VolatileMusicFolder> _folders = {};
-  final List<Music> _musics = [];
+  final SplayTreeSet<Music> _musics = SplayTreeSet();
 
   @override
   final String path;
@@ -67,23 +70,29 @@ class VolatileMusicFolder with MusicFolder, MutableMusicFolder {
   List<Music> get musics => _musics.toList(growable: false);
 
   @override
-  void addMusics(Iterable<Music> musics) {
+  Future<void> addMusics(Iterable<Music> musics) async {
     for (var m in musics) {
-      if (!_musics.contains(m)) {
-        _musics.add(m);
+      final path = File(m.path).parent.path;
+      final folder = await lookupOrCreate(path);
+      folder._musics.add(m);
+    }
+  }
+
+  @override
+  Future<void> removeMusics(Iterable<Music> musics) async {
+    for (var m in musics) {
+      final path = File(m.path).parent.path;
+      var folder = lookup(path);
+      folder?._musics.remove(m);
+      while (folder != null && folder.isEmpty) {
+        folder.parent?._folders.remove(folder.folderName);
+        folder = folder.parent;
       }
     }
   }
 
   @override
-  void removeMusics(Iterable<Music> musics) {
-    for (var m in musics) {
-      _musics.remove(m);
-    }
-  }
-
-  @override
-  VolatileMusicFolder? detachFolder(String path) {
+  Future<VolatileMusicFolder?> detachFolder(String path) async {
     VolatileMusicFolder? toDetach = lookup(path);
     toDetach?.parent?._folders.removeWhere((key, value) => value == toDetach);
     return toDetach;
@@ -95,9 +104,10 @@ class VolatileMusicFolder with MusicFolder, MutableMusicFolder {
       : _lookupSplits('', path.split('/'), false);
 
   @override
-  VolatileMusicFolder lookupOrCreate(String path) => path.isEmpty || path == "."
-      ? this
-      : _lookupSplits('', path.split('/'), true)!;
+  Future<VolatileMusicFolder> lookupOrCreate(String path) async =>
+      path.isEmpty || path == "."
+          ? this
+          : _lookupSplits('', path.split('/'), true)!;
 
   VolatileMusicFolder? _lookupSplits(
       String prefix, List<String> splits, bool build) {
@@ -105,8 +115,7 @@ class VolatileMusicFolder with MusicFolder, MutableMusicFolder {
       return this;
     }
     final key = splits.first;
-    // TODO use slice() once
-    //  https://github.com/dart-lang/collection/issues/296 has been fixed
+    // TODO use slice() once https://github.com/dart-lang/collection/issues/296 has been fixed
     final remaining = splits.sublist(1);
     if (build) {
       prefix = p.join(prefix, key);

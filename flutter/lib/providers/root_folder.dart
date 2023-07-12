@@ -27,13 +27,12 @@ class RootFolderNotifier extends NullablePrefNotifier<String> {
     }
 
     super.value = picked;
+    notifyListeners();
     return true;
   }
 
   void resetFolder() {
     debugPrint("[$tag]_resetFolder: dropping ${super.value}");
-    if (super.value != null) {
-      super.value = null;
-    }
+    super.value = null;
   }
 }

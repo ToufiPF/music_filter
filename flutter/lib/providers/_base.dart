@@ -69,7 +69,6 @@ class NullablePrefNotifier<Type> extends NullableStreamNotifier<Type> {
         prefService.set(prefName, newValue);
       }
     }
-    debugPrint("${prefService.getKeys()}, ${prefService.get<Type>(prefName)}");
   }
 }
 

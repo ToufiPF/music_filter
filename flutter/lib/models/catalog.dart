@@ -20,6 +20,9 @@ mixin Catalog on ChangeNotifier {
   /// Returns the [MusicFolder] that is the direct parent of this music
   MusicFolder? getParent(Music music);
 
+  /// Triggers a re-scan of the current root directory
+  Future<void> rescan();
+
   /// Moves the given musics to the recycleBin.
   /// Creates [MusicFolder] in the recycleBin if they do not exist
   /// and deletes empty [MusicFolder]s from [toFilter]
