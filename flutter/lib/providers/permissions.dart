@@ -23,17 +23,11 @@ enum PermissionStatus {
 
   /// Permission granted
   granted;
-
-  static PermissionStatus _from(ph.PermissionStatus status) => status.isGranted
-      ? PermissionStatus.granted
-      : status.isPermanentlyDenied
-          ? PermissionStatus.permanentlyDenied
-          : PermissionStatus.denied;
 }
 
 class PermissionsNotifier extends ChangeNotifier with WidgetsBindingObserver {
   static const String tag = "PermissionsNotifier";
-  static const int _android11SdkInt = 30;
+  static const int _androidTiramisuSdkInt = 33;
 
   /// Open the app settings
   static Future<bool> openSettings() => ph.openAppSettings();
@@ -42,7 +36,7 @@ class PermissionsNotifier extends ChangeNotifier with WidgetsBindingObserver {
     bool isAndroidQ = false;
     if (Platform.isAndroid) {
       final info = await DeviceInfoPlugin().androidInfo;
-      isAndroidQ = info.version.sdkInt >= _android11SdkInt;
+      isAndroidQ = info.version.sdkInt >= _androidTiramisuSdkInt;
     }
 
     return PermissionsNotifier._(isAndroidQ);
@@ -52,9 +46,9 @@ class PermissionsNotifier extends ChangeNotifier with WidgetsBindingObserver {
   final _statuses = <PermissionGroup, PermissionStatus>{};
 
   /// Whether to use the android Q storage permissions
-  final bool isAndroidQ;
+  final bool isAndroidTiramisu;
 
-  PermissionsNotifier._(this.isAndroidQ) {
+  PermissionsNotifier._(this.isAndroidTiramisu) {
     refreshStatus();
   }
 
@@ -140,7 +134,7 @@ class PermissionsNotifier extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   List<ph.Permission> _getPermissionsFor(PermissionGroup p) => switch (p) {
-        PermissionGroup.storage => isAndroidQ
+        PermissionGroup.storage => isAndroidTiramisu
             ? const [ph.Permission.audio, ph.Permission.manageExternalStorage]
             // ? const [ph.Permission.audio]
             : const [ph.Permission.storage],
