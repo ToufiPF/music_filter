@@ -5,6 +5,7 @@ import 'package:pref/pref.dart';
 import 'package:provider/provider.dart';
 
 import '../models/catalog.dart';
+import '../providers/root_folder.dart';
 import 'active_tabs.dart';
 
 enum Pref {
@@ -79,7 +80,15 @@ class SettingsPage extends StatelessWidget {
               final catalog = Provider.of<Catalog>(context, listen: false);
               catalog.restore(catalog.recycleBin?.allDescendants ?? []);
             },
-          )
+          ),
+          PrefButton(
+            child: Text("Select folder"),
+            onTap: () {
+              final root =
+                  Provider.of<RootFolderNotifier>(context, listen: false);
+              root.pickFolder(root.rootFolder);
+            },
+          ),
         ],
       );
 }
