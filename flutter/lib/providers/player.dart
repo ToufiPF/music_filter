@@ -27,6 +27,8 @@ mixin PlayerState {
 
   Duration get playerPosition;
 
+  Duration get playerBufferedPosition;
+
   Duration? get currentMusicDuration;
 
   int? get indexInPlaylist;
@@ -36,6 +38,8 @@ mixin PlayerStateObserver {
   Stream<bool> get isPlayingStream;
 
   Stream<Duration> get playerPositionStream;
+
+  Stream<Duration> get playerBufferedPositionStream;
 
   Stream<Duration?> get currentMusicDurationStream;
 
@@ -98,6 +102,9 @@ class JustAudioPlayerController extends PlayerStateController {
   Duration get playerPosition => _player.position;
 
   @override
+  Duration get playerBufferedPosition => _player.bufferedPosition;
+
+  @override
   Duration? get currentMusicDuration => _player.duration;
 
   // ===========================================================================
@@ -110,6 +117,10 @@ class JustAudioPlayerController extends PlayerStateController {
 
   @override
   Stream<Duration> get playerPositionStream => _player.positionStream;
+
+  @override
+  Stream<Duration> get playerBufferedPositionStream =>
+      _player.bufferedPositionStream;
 
   @override
   Stream<Duration?> get currentMusicDurationStream => _player.durationStream;

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../misc.dart';
 import '../models/music.dart';
 import '../models/state_store.dart';
 import '../providers/player.dart';
 import '../providers/playlist.dart';
+import 'player/seekbar.dart';
 
 class PlayerWidget extends StatelessWidget {
   static const double mediaIconsSize = 40;
@@ -27,7 +27,7 @@ class PlayerWidget extends StatelessWidget {
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(8, 6, 8, 0),
-              child: DurationBar(),
+              child: SeekBarWrapper(),
             ),
             PlayingMusicInfoWidget(),
           ]);
@@ -134,61 +134,5 @@ class PlayingMusicInfoWidget extends StatelessWidget {
                 ),
               );
             }));
-  }
-}
-
-class DurationBar extends StatelessWidget {
-  static String formatSeconds(int seconds) {
-    const minute = 60;
-    const hour = 60 * minute;
-
-    if (seconds >= hour) {
-      int hours = seconds ~/ hour;
-      int min = (seconds % hour) ~/ minute;
-      int sec = seconds % minute;
-      return "$hours:${min.toZeroPaddedString(2)}:${sec.toZeroPaddedString(2)}";
-    } else {
-      int min = seconds ~/ minute;
-      int sec = seconds % minute;
-      return "${min.toZeroPaddedString(2)}:${sec.toZeroPaddedString(2)}";
-    }
-  }
-
-  const DurationBar({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final player = Provider.of<PlayerStateController>(context, listen: false);
-
-    return StreamBuilder(
-      initialData: null,
-      stream: player.currentMusicDurationStream,
-      builder: (context, duration) {
-        final max = duration.data?.inSeconds ?? 0;
-        final maxFormatted = formatSeconds(max);
-        return StreamBuilder(
-          initialData: Duration.zero,
-          stream: player.playerPositionStream,
-          builder: (context, position) {
-            final pos = position.requireData.inSeconds;
-            final rem = max - pos;
-            return Row(
-              mainAxisSize: MainAxisSize.max,
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Text("${formatSeconds(pos)} / $maxFormatted"),
-                SizedBox(width: 10),
-                Expanded(
-                    child: LinearProgressIndicator(
-                        value: max == 0 ? 0 : pos / max)),
-                SizedBox(width: 10),
-                Text("-${formatSeconds(rem)}"),
-              ],
-            );
-          },
-        );
-      },
-    );
   }
 }
