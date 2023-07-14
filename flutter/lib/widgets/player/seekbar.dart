@@ -96,8 +96,8 @@ class _SeekBarState extends State<SeekBar> {
         _dragPosition ?? widget.position.inMilliseconds.toDouble(), durationMs);
 
     final duration = formatSeconds(widget.duration.inSeconds);
-    final position = formatSeconds(widget.position.inSeconds);
-    final remaining = formatSeconds(positionMs ~/ 1000);
+    final position = formatSeconds(positionMs ~/ 1000);
+    final remaining = formatSeconds((durationMs - positionMs) ~/ 1000);
 
     if (!_dragging) {
       _dragPosition = null;
