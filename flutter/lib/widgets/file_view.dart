@@ -2,7 +2,6 @@ import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../models/catalog.dart';
 import '../models/music.dart';
 import '../models/music_folder.dart';
 import '../models/state_store.dart';
@@ -10,19 +9,26 @@ import '../providers/folders.dart';
 import '../providers/playlist.dart';
 import 'context_menu.dart';
 
-class FileView extends StatefulWidget {
-  static const tag = "FileView";
+class CurrentFolderNotifier extends ChangeNotifier {
+  CurrentFolderNotifier(this.current);
 
-  const FileView({super.key, required this.root});
+  MusicFolder current;
 
-  final MusicFolder root;
+  bool get canGoUp => current.parent != null;
 
-  @override
-  State<StatefulWidget> createState() => _FileViewState();
+  void goTo(MusicFolder folder) {
+    current = folder;
+    notifyListeners();
+  }
+
+  void goUp() {
+    current = current.parent!;
+    notifyListeners();
+  }
 }
 
-class _FileViewState extends State<FileView> {
-  static const tag = FileView.tag;
+class FileView extends StatelessWidget {
+  static const tag = "FileView";
 
   /// Actions that will popup when clicking on the "..." next to a file/folder item
   static const filePopupActions = [
@@ -36,60 +42,52 @@ class _FileViewState extends State<FileView> {
     MenuAction.delete,
   ];
 
-  late MusicFolder current;
+  const FileView({super.key, required this.root});
 
-  /// Whether we can go up in the file hierarchy
-  bool get canGoUp => !current.isRoot;
-
-  void goUp() {
-    assert(canGoUp, "goUp() called without checking canGoUp");
-    setState(() => current = current.parent!);
-  }
+  final MusicFolder root;
 
   @override
-  void initState() {
-    super.initState();
-    current = widget.root;
-  }
-
-  @override
-  Widget build(BuildContext context) => WillPopScope(onWillPop: () async {
-        debugPrint("[$tag] WillPop: $current; ${widget.root}");
-        if (canGoUp) {
-          goUp();
-          return false;
-        } else {
-          return true;
-        }
-      }, child: Consumer<Catalog>(builder: (context, hierarchy, child) {
-        return Column(
-          children: [
-            ListTile(
-              title: Text(current.path),
-              leading: IconButton(
-                icon: Icon(Icons.drive_folder_upload),
-                onPressed: canGoUp ? () => goUp() : null,
-              ),
-              trailing: _trailingFolderIcon(context, current),
-            ),
-            Consumer2<ShowHiddenFilesNotifier, ShowEmptyFoldersNotifier>(
-                builder: (context, hidden, empty, child) {
-              final (folders, musics) = _getEntriesToShow(
-                  showHidden: hidden.show, showEmpty: empty.show);
-
-              if (folders.isEmpty && musics.isEmpty) {
-                return Text("Empty");
+  Widget build(BuildContext context) => ChangeNotifierProvider(
+      create: (context) => CurrentFolderNotifier(root),
+      child: Consumer<CurrentFolderNotifier>(
+        builder: (context, current, child) => WillPopScope(
+            onWillPop: () async {
+              if (current.canGoUp) {
+                current.goUp();
+                return false;
               } else {
-                return Padding(
-                    padding: const EdgeInsets.fromLTRB(24, 0, 0, 0),
-                    child: _listView(context, folders, musics));
+                return true;
               }
-            }),
-          ],
-        );
-      }));
+            },
+            child: Column(
+              children: [
+                ListTile(
+                  title: Text(current.current.path),
+                  leading: IconButton(
+                    icon: Icon(Icons.drive_folder_upload),
+                    onPressed: current.canGoUp ? current.goUp : null,
+                  ),
+                  trailing: _trailingFolderIcon(context, current.current),
+                ),
+                Consumer2<ShowHiddenFilesNotifier, ShowEmptyFoldersNotifier>(
+                    builder: (context, hidden, empty, child) {
+                  final (folders, musics) = _getEntriesToShow(current.current,
+                      showHidden: hidden.show, showEmpty: empty.show);
 
-  (List<MusicFolder>, List<Music>) _getEntriesToShow(
+                  debugPrint("[$tag]: build: $current");
+                  if (folders.isEmpty && musics.isEmpty) {
+                    return Text("Empty");
+                  } else {
+                    return Padding(
+                        padding: const EdgeInsets.fromLTRB(24, 0, 0, 0),
+                        child: _listView(context, folders, musics));
+                  }
+                }),
+              ],
+            )),
+      ));
+
+  (List<MusicFolder>, List<Music>) _getEntriesToShow(MusicFolder current,
       {required bool showHidden, required bool showEmpty}) {
     final folders = current.children
         .where((e) => showHidden || !e.folderName.startsWith('.'))
@@ -106,6 +104,7 @@ class _FileViewState extends State<FileView> {
     List<MusicFolder> folders,
     List<Music> musics,
   ) {
+    final current = Provider.of<CurrentFolderNotifier>(context, listen: false);
     return ListView.builder(
         itemCount: folders.length + musics.length,
         shrinkWrap: true,
@@ -116,7 +115,7 @@ class _FileViewState extends State<FileView> {
               title: Text(folder.folderName),
               leading: Icon(Icons.folder_outlined),
               trailing: _trailingFolderIcon(context, folder),
-              onTap: () => setState(() => current = folder),
+              onTap: () => current.goTo(folder),
             );
           } else {
             index -= folders.length;
@@ -171,6 +170,7 @@ class _FileViewState extends State<FileView> {
 
   Future<void> _onMusicPopupMenuAction(
       BuildContext context, MenuAction action, Music e) async {
+    final current = Provider.of<CurrentFolderNotifier>(context, listen: false);
     final playlist = Provider.of<PlayerQueueNotifier>(context, listen: false);
     final store = Provider.of<StateStore>(context, listen: false);
 
@@ -179,7 +179,7 @@ class _FileViewState extends State<FileView> {
         final musics = [e];
         debugPrint("[$tag] Adding $musics to playlist");
         await playlist.appendAll(musics);
-        await store.startTracking(current, musics);
+        await store.startTracking(current.current, musics);
         break;
       case MenuAction.delete:
         break;
