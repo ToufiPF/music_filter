@@ -63,12 +63,12 @@ class VolatileCatalog extends ChangeNotifier with Catalog {
       _toFilterRoot = toFilterBuilder.root;
       _recycledRoot = recycledBuilder.root;
       debugPrint(_toFilterRoot!.debugToString());
-      notifyListeners();
     } else {
       _cache.clear();
       _toFilterRoot = null;
       _recycledRoot = null;
     }
+    notifyListeners();
   }
 
   Future<void> _scan(

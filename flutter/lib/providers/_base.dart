@@ -19,10 +19,8 @@ class NullableStreamNotifier<Type> extends ChangeNotifier {
     required Type? initialValue,
   }) : _value = initialValue {
     _subscription = stream.listen((event) {
-      if (_value != event) {
-        _value = event;
-        notifyListeners();
-      }
+      _value = event;
+      notifyListeners();
     });
   }
 
@@ -88,9 +86,6 @@ class NonNullablePrefNotifier<Type extends Object>
 
   @protected
   set value(Type newValue) {
-    if (_value != newValue) {
-      prefService.set(prefName, newValue);
-    }
-    debugPrint("${prefService.getKeys()}, ${prefService.get<Type>(prefName)}");
+    prefService.set(prefName, newValue);
   }
 }

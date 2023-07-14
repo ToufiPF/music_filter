@@ -27,7 +27,6 @@ class RootFolderNotifier extends NullablePrefNotifier<String> {
     }
 
     super.value = picked;
-    notifyListeners();
     return true;
   }
 
