@@ -10,6 +10,7 @@ import 'models/catalog.dart';
 import 'models/catalog_volatile.dart';
 import 'models/state_store.dart';
 import 'models/state_store_volatile.dart';
+import 'notification.dart';
 import 'pages/home.dart';
 import 'providers/active_tabs.dart';
 import 'providers/folders.dart';
@@ -21,8 +22,18 @@ import 'settings/settings.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  //
+  // await JustAudioBackground.init(
+  //   androidNotificationChannelId: 'ch.epfl.music_filter',
+  //   androidNotificationChannelName: 'Audio playback',
+  //   androidNotificationClickStartsActivity: true,
+  //   androidNotificationOngoing: false,
+  //   androidStopForegroundOnPause: true,
+  // );
 
-  await JustAudioBackground.init(
+  await NotifHandler.init(
+    // queue: playlist,
+    // stateStore: stateStore,
     androidNotificationChannelId: 'ch.epfl.music_filter',
     androidNotificationChannelName: 'Audio playback',
     androidNotificationClickStartsActivity: true,
@@ -34,7 +45,6 @@ Future<void> main() async {
     prefix: "",
     defaults: Pref.getDefaultValues(),
   );
-  debugPrint("Preferences: ${prefService.getKeys()}");
 
   final permissions = await PermissionsNotifier.initialize();
   WidgetsBinding.instance.addObserver(permissions);
@@ -59,6 +69,13 @@ Future<void> main() async {
       VolatileCatalog(rootFolder); //IsarCatalog(isarDb: isar);
   final StateStore stateStore =
       VolatileStateStore(rootFolder); // IsarStateStore(isarDb: isar);
+
+  catalog.addListener(() {
+      final folder = catalog.toFilter;
+      if (folder != null) {
+        playlist.appendAll(folder.allDescendants);
+      }
+  });
 
   runApp(MultiProvider(
     providers: [
@@ -110,7 +127,7 @@ class MyApp extends StatelessWidget {
           });
 
   Widget _initialPage(BuildContext context) {
-    const required = [PermissionGroup.storage];
+    const required = [PermissionGroup.notif, PermissionGroup.storage];
 
     return Consumer<PermissionsNotifier>(
         builder: (context, perm, child) => perm
