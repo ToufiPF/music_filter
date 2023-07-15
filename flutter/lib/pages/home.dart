@@ -30,11 +30,13 @@ class _HomePageState extends State<HomePage> {
               child: Scaffold(
                 appBar: AppBar(
                   backgroundColor: theme.colorScheme.inversePrimary,
-                  flexibleSpace: SafeArea(
-                    child: TabBar(tabs: [
+                  toolbarHeight: 0,
+                  bottom: TabBar(
+                    isScrollable: false,
+                    tabs: [
                       for (var tab in activeTabs.tabs)
                         Tab(icon: Icon(tab.iconDefault), text: tab.label)
-                    ]),
+                    ],
                   ),
                 ),
                 body: TabBarView(
