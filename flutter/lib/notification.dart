@@ -14,61 +14,17 @@ late JustAudioPlatform _platform;
 
 /// Provides the [init] method to initialise just_audio for background playback.
 class NotifHandler {
-  /// Initialise just_audio for background playback. This should be called from
-  /// your app's `main` method. e.g.:
-  ///
-  /// ```dart
-  /// Future<void> main() async {
-  ///   await JustAudioBackground.init(
-  ///     androidNotificationChannelId: 'com.ryanheise.bg_demo.channel.audio',
-  ///     androidNotificationChannelName: 'Audio playback',
-  ///     androidNotificationOngoing: true,
-  ///   );
-  ///   runApp(MyApp());
-  /// }
-  /// ```
-  ///
-  /// Each parameter controls a behaviour in audio_service. Consult
-  /// audio_service's `AudioServiceConfig` API documentation for more
-  /// information.
-  static Future<void> init({
-    bool androidResumeOnClick = true,
-    String? androidNotificationChannelId,
-    String androidNotificationChannelName = 'Notifications',
-    String? androidNotificationChannelDescription,
-    Color? notificationColor,
-    String androidNotificationIcon = 'mipmap/ic_launcher',
-    bool androidShowNotificationBadge = false,
-    bool androidNotificationClickStartsActivity = true,
-    bool androidNotificationOngoing = false,
-    bool androidStopForegroundOnPause = true,
-    int? artDownscaleWidth,
-    int? artDownscaleHeight,
-    Duration fastForwardInterval = const Duration(seconds: 10),
-    Duration rewindInterval = const Duration(seconds: 10),
-    bool preloadArtwork = false,
-    Map<String, dynamic>? androidBrowsableRootExtras,
-  }) async {
+  static Future<void> init() async {
     WidgetsFlutterBinding.ensureInitialized();
     await _JustAudioBackgroundPlugin.setup(
-      androidResumeOnClick: androidResumeOnClick,
-      androidNotificationChannelId: androidNotificationChannelId,
-      androidNotificationChannelName: androidNotificationChannelName,
-      androidNotificationChannelDescription:
-          androidNotificationChannelDescription,
-      notificationColor: notificationColor,
-      androidNotificationIcon: androidNotificationIcon,
-      androidShowNotificationBadge: androidShowNotificationBadge,
-      androidNotificationClickStartsActivity:
-          androidNotificationClickStartsActivity,
-      androidNotificationOngoing: androidNotificationOngoing,
-      androidStopForegroundOnPause: androidStopForegroundOnPause,
-      artDownscaleWidth: artDownscaleWidth,
-      artDownscaleHeight: artDownscaleHeight,
-      fastForwardInterval: fastForwardInterval,
-      rewindInterval: rewindInterval,
-      preloadArtwork: preloadArtwork,
-      androidBrowsableRootExtras: androidBrowsableRootExtras,
+      androidNotificationChannelId: 'ch.epfl.music_filter',
+      androidNotificationChannelName: 'Audio playback',
+      androidNotificationChannelDescription: 'Play and manage audio',
+      androidResumeOnClick: true,
+      androidNotificationClickStartsActivity: true,
+      // Make notif swipable when paused
+      androidNotificationOngoing: true,
+      androidStopForegroundOnPause: true,
     );
   }
 }
@@ -382,8 +338,8 @@ class _PlayerAudioHandler extends BaseAudioHandler
         .distinct()
         .debounceTime(const Duration(milliseconds: 100))
         .map((track) {
-          // Platform may send us a null duration on dispose, which we should
-          // ignore.
+          // Platform may send us a null duration on dispose,
+          // which we should ignore.
           final currentMediaItem = this.currentMediaItem;
           if (currentMediaItem != null) {
             if (track.duration == null && currentMediaItem.duration != null) {
@@ -687,6 +643,7 @@ class _PlayerAudioHandler extends BaseAudioHandler
 
   /// Broadcasts the current state to all clients.
   void _broadcastState() {
+    /// Actions that should be shown in the minimized notification
     const compactActions = {
       MediaAction.skipToPrevious,
       MediaAction.pause,
@@ -694,30 +651,32 @@ class _PlayerAudioHandler extends BaseAudioHandler
       MediaAction.skipToNext,
     };
 
-    final controls = [
-      if (hasPrevious) MediaControl.skipToPrevious,
+    /// The list of currently enabled controls which should be shown in the media
+    /// notification. Each control represents a clickable button with a
+    /// [MediaAction] that must be one of:
+    ///
+    /// * [MediaAction.stop]
+    /// * [MediaAction.pause]
+    /// * [MediaAction.play]
+    /// * [MediaAction.rewind]
+    /// * [MediaAction.skipToPrevious]
+    /// * [MediaAction.skipToNext]
+    /// * [MediaAction.fastForward]
+    /// * [MediaAction.playPause]
+    final controls = <MediaControl>[
+      MediaControl.skipToPrevious,
       if (_playing) MediaControl.pause else MediaControl.play,
-      MediaControl.stop,
       if (hasNext) MediaControl.skipToNext,
       MediaControl(
         androidIcon: "drawable/baseline_delete_24",
         label: "delete",
-        action: MediaAction.setShuffleMode,
-      ),
-      MediaControl(
-        androidIcon: "drawable/baseline_save_24",
-        label: "save",
-        action: MediaAction.setRating,
+        action: MediaAction.fastForward,
       ),
     ];
 
     playbackState.add(playbackState.nvalue!.copyWith(
       controls: controls,
-      systemActions: {
-        MediaAction.seek,
-        MediaAction.seekForward,
-        MediaAction.seekBackward,
-      },
+      systemActions: {MediaAction.seek},
       androidCompactActionIndices: List.generate(controls.length, (i) => i)
           .where((i) => compactActions.contains(controls[i].action))
           .toList(),

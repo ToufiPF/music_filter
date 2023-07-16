@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:just_audio_background/just_audio_background.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pref/pref.dart';
 import 'package:provider/provider.dart';
@@ -32,14 +31,9 @@ Future<void> main() async {
   // );
 
   await NotifHandler.init(
-    // queue: playlist,
-    // stateStore: stateStore,
-    androidNotificationChannelId: 'ch.epfl.music_filter',
-    androidNotificationChannelName: 'Audio playback',
-    androidNotificationClickStartsActivity: true,
-    androidNotificationOngoing: false,
-    androidStopForegroundOnPause: true,
-  );
+      // queue: playlist,
+      // stateStore: stateStore,
+      );
 
   final prefService = await PrefServiceShared.init(
     prefix: "",
@@ -71,10 +65,10 @@ Future<void> main() async {
       VolatileStateStore(rootFolder); // IsarStateStore(isarDb: isar);
 
   catalog.addListener(() {
-      final folder = catalog.toFilter;
-      if (folder != null) {
-        playlist.appendAll(folder.allDescendants);
-      }
+    final folder = catalog.toFilter;
+    if (folder != null) {
+      playlist.appendAll(folder.allDescendants);
+    }
   });
 
   runApp(MultiProvider(
