@@ -30,11 +30,6 @@ Future<void> main() async {
   //   androidStopForegroundOnPause: true,
   // );
 
-  await NotifHandler.init(
-      // queue: playlist,
-      // stateStore: stateStore,
-      );
-
   final prefService = await PrefServiceShared.init(
     prefix: "",
     defaults: Pref.getDefaultValues(),
@@ -48,8 +43,6 @@ Future<void> main() async {
     prefName: Pref.rootFolder.name,
   );
   final PlayerQueueNotifier playlist = JustAudioQueueNotifier(rootFolder);
-  final PlayerStateController player = JustAudioPlayerController();
-  player.attachPlaylistController(playlist);
 
   final docDir = await getApplicationDocumentsDirectory();
   final isarDir = Directory('${docDir.path}/isar_db');
@@ -64,12 +57,13 @@ Future<void> main() async {
   final StateStore stateStore =
       VolatileStateStore(rootFolder); // IsarStateStore(isarDb: isar);
 
-  catalog.addListener(() {
-    final folder = catalog.toFilter;
-    if (folder != null) {
-      playlist.appendAll(folder.allDescendants);
-    }
-  });
+  await NotifHandler.init(
+    queue: playlist,
+    stateStore: stateStore,
+  );
+
+  final PlayerStateController player = JustAudioPlayerController();
+  player.attachPlaylistController(playlist);
 
   runApp(MultiProvider(
     providers: [

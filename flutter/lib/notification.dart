@@ -7,6 +7,10 @@ import 'package:flutter/services.dart';
 import 'package:just_audio_platform_interface/just_audio_platform_interface.dart';
 import 'package:rxdart/rxdart.dart';
 
+import 'models/music.dart';
+import 'models/state_store.dart';
+import 'providers/playlist.dart';
+
 export 'package:audio_service/audio_service.dart' show MediaItem;
 
 late SwitchAudioHandler _audioHandler;
@@ -14,70 +18,37 @@ late JustAudioPlatform _platform;
 
 /// Provides the [init] method to initialise just_audio for background playback.
 class NotifHandler {
-  static Future<void> init() async {
+  static Future<void> init({
+    required StateStore stateStore,
+    required PlayerQueueNotifier queue,
+  }) async {
     WidgetsFlutterBinding.ensureInitialized();
-    await _JustAudioBackgroundPlugin.setup(
-      androidNotificationChannelId: 'ch.epfl.music_filter',
-      androidNotificationChannelName: 'Audio playback',
-      androidNotificationChannelDescription: 'Play and manage audio',
-      androidResumeOnClick: true,
-      androidNotificationClickStartsActivity: true,
-      // Make notif swipable when paused
-      androidNotificationOngoing: true,
-      androidStopForegroundOnPause: true,
+
+    _platform = JustAudioPlatform.instance;
+    JustAudioPlatform.instance = _JustAudioBackgroundPlugin(stateStore, queue);
+    _audioHandler = await AudioService.init(
+      builder: () => SwitchAudioHandler(BaseAudioHandler()),
+      config: AudioServiceConfig(
+        androidNotificationChannelId: 'ch.epfl.music_filter',
+        androidNotificationChannelName: 'Audio playback',
+        androidNotificationChannelDescription: 'Play and manage audio',
+        androidResumeOnClick: true,
+        androidNotificationClickStartsActivity: true,
+        // Make notif swipable when paused
+        androidNotificationOngoing: true,
+        androidStopForegroundOnPause: true,
+      ),
     );
   }
 }
 
 class _JustAudioBackgroundPlugin extends JustAudioPlatform {
-  static Future<void> setup({
-    bool androidResumeOnClick = true,
-    String? androidNotificationChannelId,
-    String androidNotificationChannelName = 'Notifications',
-    String? androidNotificationChannelDescription,
-    Color? notificationColor,
-    String androidNotificationIcon = 'mipmap/ic_launcher',
-    bool androidShowNotificationBadge = false,
-    bool androidNotificationClickStartsActivity = true,
-    bool androidNotificationOngoing = false,
-    bool androidStopForegroundOnPause = true,
-    int? artDownscaleWidth,
-    int? artDownscaleHeight,
-    Duration fastForwardInterval = const Duration(seconds: 10),
-    Duration rewindInterval = const Duration(seconds: 10),
-    bool preloadArtwork = false,
-    Map<String, dynamic>? androidBrowsableRootExtras,
-  }) async {
-    _platform = JustAudioPlatform.instance;
-    JustAudioPlatform.instance = _JustAudioBackgroundPlugin();
-    _audioHandler = await AudioService.init(
-      builder: () => SwitchAudioHandler(BaseAudioHandler()),
-      config: AudioServiceConfig(
-        androidResumeOnClick: androidResumeOnClick,
-        androidNotificationChannelId: androidNotificationChannelId,
-        androidNotificationChannelName: androidNotificationChannelName,
-        androidNotificationChannelDescription:
-            androidNotificationChannelDescription,
-        notificationColor: notificationColor,
-        androidNotificationIcon: androidNotificationIcon,
-        androidShowNotificationBadge: androidShowNotificationBadge,
-        androidNotificationClickStartsActivity:
-            androidNotificationClickStartsActivity,
-        androidNotificationOngoing: androidNotificationOngoing,
-        androidStopForegroundOnPause: androidStopForegroundOnPause,
-        artDownscaleWidth: artDownscaleWidth,
-        artDownscaleHeight: artDownscaleHeight,
-        fastForwardInterval: fastForwardInterval,
-        rewindInterval: rewindInterval,
-        preloadArtwork: preloadArtwork,
-        androidBrowsableRootExtras: androidBrowsableRootExtras,
-      ),
-    );
-  }
+  final StateStore stateStore;
+  final PlayerQueueNotifier queue;
 
   _JustAudioPlayer? _player;
 
-  _JustAudioBackgroundPlugin();
+  _JustAudioBackgroundPlugin(this.stateStore, this.queue);
 
   @override
   Future<AudioPlayerPlatform> init(InitRequest request) async {
@@ -89,6 +60,8 @@ class _JustAudioBackgroundPlugin extends JustAudioPlatform {
     }
     _player = _JustAudioPlayer(
       initRequest: request,
+      stateStore: stateStore,
+      playlistQueue: queue,
     );
     return _player!;
   }
@@ -114,6 +87,9 @@ class _JustAudioBackgroundPlugin extends JustAudioPlatform {
 
 class _JustAudioPlayer extends AudioPlayerPlatform {
   final InitRequest initRequest;
+  final StateStore stateStore;
+  final PlayerQueueNotifier playlistQueue;
+
   final eventController = StreamController<PlaybackEventMessage>.broadcast();
   final playerDataController = StreamController<PlayerDataMessage>.broadcast();
   bool? _playing;
@@ -121,8 +97,13 @@ class _JustAudioPlayer extends AudioPlayerPlatform {
   int? _androidAudioSessionId;
   late final _PlayerAudioHandler _playerAudioHandler;
 
-  _JustAudioPlayer({required this.initRequest}) : super(initRequest.id) {
-    _playerAudioHandler = _PlayerAudioHandler(initRequest);
+  _JustAudioPlayer({
+    required this.initRequest,
+    required this.stateStore,
+    required this.playlistQueue,
+  }) : super(initRequest.id) {
+    _playerAudioHandler =
+        _PlayerAudioHandler(initRequest, stateStore, playlistQueue);
     _audioHandler.inner = _playerAudioHandler;
     _audioHandler.playbackState.listen((playbackState) {
       broadcastPlaybackEvent();
@@ -268,6 +249,15 @@ class _JustAudioPlayer extends AudioPlayerPlatform {
 
 class _PlayerAudioHandler extends BaseAudioHandler
     with QueueHandler, SeekHandler {
+  static const tag = "PlayerAudioHandler";
+
+  final StateStore _stateStore;
+  final PlayerQueueNotifier _queue;
+
+  final BehaviorSubject<KeepState> _currentMusicState =
+      BehaviorSubject.seeded(KeepState.unspecified);
+  StreamSubscription<KeepState>? _currentMusicStateSubscription;
+
   final _playerCompleter = Completer<AudioPlayerPlatform>();
   PlaybackEventMessage _justAudioEvent = PlaybackEventMessage(
     processingState: ProcessingStateMessage.idle,
@@ -294,6 +284,9 @@ class _PlayerAudioHandler extends BaseAudioHandler
 
   int? get index => _justAudioEvent.currentIndex;
 
+  Music? get currentMusic =>
+      index != null ? _queue.queue.elementAtOrNull(index!) : null;
+
   MediaItem? get currentMediaItem => index != null &&
           currentQueue != null &&
           index! >= 0 &&
@@ -303,7 +296,7 @@ class _PlayerAudioHandler extends BaseAudioHandler
 
   List<MediaItem>? get currentQueue => queue.nvalue;
 
-  _PlayerAudioHandler(InitRequest initRequest) {
+  _PlayerAudioHandler(InitRequest initRequest, this._stateStore, this._queue) {
     _init(initRequest);
   }
 
@@ -313,6 +306,7 @@ class _PlayerAudioHandler extends BaseAudioHandler
     final playbackEventMessageStream = player.playbackEventMessageStream;
     playbackEventMessageStream.listen((event) {
       _justAudioEvent = event;
+      _updateCurrentMusicState();
       _broadcastState();
     });
     playbackEventMessageStream
@@ -362,6 +356,25 @@ class _PlayerAudioHandler extends BaseAudioHandler
         });
   }
 
+  void _updateCurrentMusicState() {
+    final music = currentMusic;
+    _currentMusicStateSubscription?.cancel();
+
+    if (music != null) {
+      _currentMusicStateSubscription =
+          _stateStore.watchState(music).listen((e) {
+        debugPrint("[$tag]_updateCurrentMusicState: got new state $e");
+
+        _currentMusicState.add(e);
+        _broadcastState();
+      });
+    } else {
+      _currentMusicStateSubscription = null;
+      _currentMusicState.add(KeepState.unspecified);
+      _broadcastState();
+    }
+  }
+
   @override
   Future<void> updateQueue(List<MediaItem> queue) async {
     this.queue.add(queue);
@@ -370,6 +383,7 @@ class _PlayerAudioHandler extends BaseAudioHandler
         index! >= 0 &&
         index! < queue.length) {
       mediaItem.add(queue[index!]);
+      _updateCurrentMusicState();
     }
   }
 
@@ -548,8 +562,16 @@ class _PlayerAudioHandler extends BaseAudioHandler
   }
 
   @override
-  Future<void> fastForward() =>
-      _seekRelative(AudioService.config.fastForwardInterval);
+  Future<void> fastForward() async {
+    debugPrint("[$tag]_fastForward: custom implementation");
+
+    final music = currentMusic;
+    if (music != null) {
+      final nextState = _currentMusicState.value.nextToggleState;
+      _stateStore.markAs(music, nextState);
+      _broadcastState();
+    }
+  }
 
   @override
   Future<void> rewind() => _seekRelative(-AudioService.config.rewindInterval);
@@ -651,6 +673,8 @@ class _PlayerAudioHandler extends BaseAudioHandler
       MediaAction.skipToNext,
     };
 
+    final nextState = _currentMusicState.value.nextToggleState;
+
     /// The list of currently enabled controls which should be shown in the media
     /// notification. Each control represents a clickable button with a
     /// [MediaAction] that must be one of:
@@ -668,8 +692,12 @@ class _PlayerAudioHandler extends BaseAudioHandler
       if (_playing) MediaControl.pause else MediaControl.play,
       if (hasNext) MediaControl.skipToNext,
       MediaControl(
-        androidIcon: "drawable/baseline_delete_24",
-        label: "delete",
+        androidIcon: switch (nextState) {
+          KeepState.unspecified => "drawable/baseline_restore_24",
+          KeepState.kept => "drawable/baseline_save_24",
+          KeepState.deleted => "drawable/baseline_delete_24",
+        },
+        label: "markAs",
         action: MediaAction.fastForward,
       ),
     ];
@@ -826,6 +854,11 @@ class TrackInfo {
 extension _ValueStreamExtension<T> on ValueStream<T> {
   /// Backwards compatible version of valueOrNull.
   T? get nvalue => hasValue ? value : null;
+}
+
+extension _NextState on KeepState {
+  KeepState get nextToggleState =>
+      KeepState.values[(index + 1) % KeepState.values.length];
 }
 
 //

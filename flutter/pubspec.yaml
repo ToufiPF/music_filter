@@ -45,7 +45,7 @@ dependencies:
   flutter_media_metadata: ^1.0.0+1        # Fetch audio tags from File
   audio_service: ^0.18.0
   just_audio: ^0.9.30                     # Audio player
-  just_audio_background: ^0.0.1-beta.10   # Audio player in background
+  just_audio_platform_interface: ^4.2.0
   rxdart: ^0.27.0
 
 dev_dependencies:
