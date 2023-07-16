@@ -81,6 +81,8 @@ class VolatileCatalog extends ChangeNotifier with Catalog {
     // the very first call should populate the root instead of creating a new subfolder
     var newFolder =
         basePath.isEmpty ? parent : builder.addSubfolder(parent, basePath);
+
+    final futures = <Future<void>>[];
     await for (var e in folder.list(recursive: false, followLinks: false)) {
       final name = p.basename(e.path);
       final path = p.join(basePath, name);
@@ -90,15 +92,18 @@ class VolatileCatalog extends ChangeNotifier with Catalog {
           continue;
         }
 
-        await _scan(builder, path, newFolder, scanned, e);
+        futures.add(_scan(builder, path, newFolder, scanned, e));
       } else if (e is File) {
-        final music = await fetchTags(e, path);
-        if (music != null) {
-          builder.addMusics(newFolder, [music]);
-          scanned.add(music);
-        }
+        futures.add(fetchTags(e, path).then((music) {
+          if (music != null) {
+            builder.addMusics(newFolder, [music]);
+            scanned.add(music);
+          }
+        }));
       }
     }
+
+    await Future.wait(futures);
   }
 
   Future<Music?> fetchTags(File file, String path) async {
