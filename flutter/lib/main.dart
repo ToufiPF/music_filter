@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:just_audio_background/just_audio_background.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pref/pref.dart';
 import 'package:provider/provider.dart';
@@ -10,6 +9,7 @@ import 'models/catalog.dart';
 import 'models/catalog_volatile.dart';
 import 'models/state_store.dart';
 import 'models/state_store_volatile.dart';
+import 'notification.dart';
 import 'pages/home.dart';
 import 'providers/active_tabs.dart';
 import 'providers/folders.dart';
@@ -21,20 +21,19 @@ import 'settings/settings.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  await JustAudioBackground.init(
-    androidNotificationChannelId: 'ch.epfl.music_filter',
-    androidNotificationChannelName: 'Audio playback',
-    androidNotificationClickStartsActivity: true,
-    androidNotificationOngoing: false,
-    androidStopForegroundOnPause: true,
-  );
+  //
+  // await JustAudioBackground.init(
+  //   androidNotificationChannelId: 'ch.epfl.music_filter',
+  //   androidNotificationChannelName: 'Audio playback',
+  //   androidNotificationClickStartsActivity: true,
+  //   androidNotificationOngoing: false,
+  //   androidStopForegroundOnPause: true,
+  // );
 
   final prefService = await PrefServiceShared.init(
     prefix: "",
     defaults: Pref.getDefaultValues(),
   );
-  debugPrint("Preferences: ${prefService.getKeys()}");
 
   final permissions = await PermissionsNotifier.initialize();
   WidgetsBinding.instance.addObserver(permissions);
@@ -44,8 +43,6 @@ Future<void> main() async {
     prefName: Pref.rootFolder.name,
   );
   final PlayerQueueNotifier playlist = JustAudioQueueNotifier(rootFolder);
-  final PlayerStateController player = JustAudioPlayerController();
-  player.attachPlaylistController(playlist);
 
   final docDir = await getApplicationDocumentsDirectory();
   final isarDir = Directory('${docDir.path}/isar_db');
@@ -59,6 +56,14 @@ Future<void> main() async {
       VolatileCatalog(rootFolder); //IsarCatalog(isarDb: isar);
   final StateStore stateStore =
       VolatileStateStore(rootFolder); // IsarStateStore(isarDb: isar);
+
+  await NotifHandler.init(
+    queue: playlist,
+    stateStore: stateStore,
+  );
+
+  final PlayerStateController player = JustAudioPlayerController();
+  player.attachPlaylistController(playlist);
 
   runApp(MultiProvider(
     providers: [
@@ -110,7 +115,7 @@ class MyApp extends StatelessWidget {
           });
 
   Widget _initialPage(BuildContext context) {
-    const required = [PermissionGroup.storage];
+    const required = [PermissionGroup.notif, PermissionGroup.storage];
 
     return Consumer<PermissionsNotifier>(
         builder: (context, perm, child) => perm
