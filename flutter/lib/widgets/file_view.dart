@@ -93,8 +93,9 @@ class FileView extends StatelessWidget {
   ) {
     final current = Provider.of<CurrentFolderNotifier>(context, listen: false);
     return ListView.builder(
-        itemCount: folders.length + musics.length,
+        physics: NeverScrollableScrollPhysics(),
         shrinkWrap: true,
+        itemCount: folders.length + musics.length,
         itemBuilder: (context, index) {
           if (index < folders.length) {
             final folder = folders[index];

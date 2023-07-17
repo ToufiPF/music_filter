@@ -56,7 +56,7 @@ class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
 
   @override
-  Widget build(BuildContext context) => PrefPage(
+  Widget build(BuildContext context) => Column(
         children: [
           const PrefTitle(title: Text('General')),
           PrefActiveTabs(

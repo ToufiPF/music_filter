@@ -19,6 +19,8 @@ class _RecycleBinViewState extends State<RecycleBinView> {
           final recycleRoot = catalog.recycleBin;
           final musics = recycleRoot?.allDescendants ?? [];
           return ListView.builder(
+              physics: NeverScrollableScrollPhysics(),
+              shrinkWrap: true,
               itemCount: musics.length,
               itemBuilder: (context, idx) =>
                   ListTile(

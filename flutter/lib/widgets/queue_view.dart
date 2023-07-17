@@ -35,6 +35,8 @@ class QueueView extends StatelessWidget {
                 child: Text("Nothing to play !\n"
                     "Start by adding some songs to the queue"))
             : ListView.builder(
+                physics: NeverScrollableScrollPhysics(),
+                shrinkWrap: true,
                 prototypeItem: prototype,
                 itemCount: queue.queue.length,
                 // Trigger rebuild only if currently played index goes to != to == or vice-versa

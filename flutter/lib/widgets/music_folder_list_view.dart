@@ -26,6 +26,8 @@ class _MusicFolderListViewState extends State<MusicFolderListView> {
       },
       child: shownContent == null
           ? ListView.builder(
+              physics: NeverScrollableScrollPhysics(),
+              shrinkWrap: true,
               itemCount: widget.folders.length,
               itemBuilder: (context, idx) {
                 final folder = widget.folders[idx];
