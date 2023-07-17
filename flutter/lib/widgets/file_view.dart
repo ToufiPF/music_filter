@@ -105,7 +105,12 @@ class FileView extends StatelessWidget {
             final folder = folders[index];
             return ListTile(
               title: Text(folder.folderName),
-              leading: Icon(Icons.folder_open),
+              leading: Selector<StateStore, bool>(
+                selector: (context, store) => store.isTrackedFolder(folder),
+                builder: (context, isTracked, child) => isTracked
+                    ? Icon(Icons.folder)
+                    : Icon(Icons.folder_outlined),
+              ),
               trailing: _trailingFolderWidget(context, folder),
               onTap: () => current.goTo(folder),
             );
