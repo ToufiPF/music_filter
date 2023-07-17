@@ -56,6 +56,17 @@ class VolatileStateStore extends ChangeNotifier with StateStore {
   MusicFolder get openFoldersHierarchy => _openHierarchy;
 
   @override
+  bool isTracked(Music music) =>
+      openFoldersHierarchy.lookup(music.parentPath) != null;
+
+  @override
+  bool isTrackedFolder(MusicFolder folder, {bool recursive = true}) {
+    final set = openFoldersHierarchy.allDescendants.toSet();
+    final toTest = recursive ? folder.allDescendants : folder.musics;
+    return set.containsAll(toTest);
+  }
+
+  @override
   Future<void> startTracking(List<Music> musics) async {
     const state = KeepState.unspecified;
     for (var music in musics) {

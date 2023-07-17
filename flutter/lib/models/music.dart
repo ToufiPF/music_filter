@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:path/path.dart' as p;
 
 /// Model for a music file
@@ -23,6 +25,9 @@ abstract class Music implements Comparable<Music> {
   /// String for displaying the music's artist(s)
   String get displayArtist =>
       artists.isNotEmpty ? artists.join(", ") : albumArtist ?? "Unknown artist";
+
+  /// Path to the parent folder (computed from path)
+  String get parentPath => File(path).parent.path;
 
   @override
   bool operator ==(Object other) => other is Music && path == other.path;

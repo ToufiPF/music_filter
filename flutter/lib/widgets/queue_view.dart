@@ -81,10 +81,7 @@ class QueueView extends StatelessWidget {
               children: [
                 IconActions.keptMusicAction(context, music, snapshot.data!),
                 IconActions.deleteMusicAction(context, music, snapshot.data!),
-                PopupMenuButton<int>(
-                    child: Icon(Icons.more_vert, size: 32),
-                    itemBuilder: (context) => [],
-                    onSelected: (selectedAction) {}),
+                IconActions.exportActionMusic(context, music, snapshot.data!),
               ],
             );
           }),

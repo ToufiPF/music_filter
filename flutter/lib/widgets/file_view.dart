@@ -7,6 +7,7 @@ import '../models/music_folder.dart';
 import '../models/state_store.dart';
 import '../providers/folders.dart';
 import '../providers/playlist.dart';
+import 'context_menu.dart';
 
 class CurrentFolderNotifier extends ChangeNotifier {
   CurrentFolderNotifier(this.current);
@@ -92,6 +93,9 @@ class FileView extends StatelessWidget {
     List<Music> musics,
   ) {
     final current = Provider.of<CurrentFolderNotifier>(context, listen: false);
+    final store = Provider.of<StateStore>(context, listen: false);
+    final playlist = Provider.of<PlayerQueueNotifier>(context, listen: false);
+
     return ListView.builder(
         physics: NeverScrollableScrollPhysics(),
         shrinkWrap: true,
@@ -101,10 +105,7 @@ class FileView extends StatelessWidget {
             final folder = folders[index];
             return ListTile(
               title: Text(folder.folderName),
-              leading: IconButton(
-                  icon: Icon(Icons.rule_folder_rounded),
-                  onPressed: () =>
-                      _startFiltering(context, folder.allDescendants)),
+              leading: Icon(Icons.folder_open),
               trailing: _trailingFolderWidget(context, folder),
               onTap: () => current.goTo(folder),
             );
@@ -114,7 +115,10 @@ class FileView extends StatelessWidget {
             return ListTile(
               title: Text(music.filename),
               leading: Icon(Icons.playlist_add),
-              onTap: () => _startFiltering(context, [music]),
+              onTap: () async {
+                await playlist.appendAll([music]);
+                await store.startTracking([music]);
+              },
               trailing: _trailingFileWidget(context, music),
             );
           }
@@ -122,38 +126,16 @@ class FileView extends StatelessWidget {
   }
 
   Widget _trailingFolderWidget(BuildContext context, MusicFolder dir) => Row(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          IconButton(
-              onPressed: () => _export(context, dir.allDescendants),
-              icon: Icon(Icons.done_all)),
-        ],
-      );
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            IconActions.trackOrExportFolder(context, dir),
+          ]);
 
   Widget _trailingFileWidget(BuildContext context, Music music) => Row(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          IconButton(
-              onPressed: () => _export(context, [music]),
-              icon: Icon(Icons.done)),
-        ],
-      );
-
-  Future<void> _startFiltering(BuildContext context, List<Music> musics) async {
-    final playlist = Provider.of<PlayerQueueNotifier>(context, listen: false);
-    final store = Provider.of<StateStore>(context, listen: false);
-    debugPrint("[$tag]_startFiltering($musics)");
-    await playlist.appendAll(musics);
-    await store.startTracking(musics);
-  }
-
-  Future<void> _export(BuildContext context, List<Music> musics) async {
-    final playlist = Provider.of<PlayerQueueNotifier>(context, listen: false);
-    final store = Provider.of<StateStore>(context, listen: false);
-    debugPrint("[$tag]_export($musics)");
-    await playlist.removeAll(musics);
-    await store.exportState(musics);
-  }
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            IconActions.trackOrExportMusic(context, music),
+          ]);
 }

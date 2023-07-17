@@ -72,8 +72,7 @@ class VolatileMusicFolder extends MusicFolder with MutableMusicFolder {
   @override
   Future<void> addMusics(Iterable<Music> musics) async {
     for (var m in musics) {
-      final path = File(m.path).parent.path;
-      final folder = await lookupOrCreate(path);
+      final folder = await lookupOrCreate(m.parentPath);
       folder._musics.add(m);
     }
   }
@@ -81,8 +80,7 @@ class VolatileMusicFolder extends MusicFolder with MutableMusicFolder {
   @override
   Future<void> removeMusics(Iterable<Music> musics) async {
     for (var m in musics) {
-      final path = File(m.path).parent.path;
-      var folder = lookup(path);
+      var folder = lookup(m.parentPath);
       folder?._musics.remove(m);
       while (folder != null && folder.isEmpty) {
         folder.parent?._folders.remove(folder.folderName);

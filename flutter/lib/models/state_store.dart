@@ -28,6 +28,12 @@ mixin StateStore on ChangeNotifier {
   /// List of musics currently tracked
   MusicFolder get openFoldersHierarchy;
 
+  /// Returns true if music is tracked by store
+  bool isTracked(Music music);
+
+  /// Returns true if all musics in folder are tracked by store
+  bool isTrackedFolder(MusicFolder folder, {bool recursive = true});
+
   /// Registers the given musics into the [StateStore]
   /// their default state is [KeepState.unspecified]
   Future<void> startTracking(List<Music> musics);
