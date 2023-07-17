@@ -148,7 +148,7 @@ class IconActions {
             onPressed: () => store.markAs(music, targetState), icon: Icon(icon))
         : IconButton(
             onPressed: () => store.markAs(music, KeepState.unspecified),
-            icon: Icon(Icons.refresh));
+            icon: Icon(Icons.restore));
   }
 
   IconActions._();
