@@ -56,7 +56,7 @@ class VolatileStateStore extends ChangeNotifier with StateStore {
   MusicFolder get openFoldersHierarchy => _openHierarchy;
 
   @override
-  Future<void> startTracking(MusicFolder parent, List<Music> musics) async {
+  Future<void> startTracking(List<Music> musics) async {
     const state = KeepState.unspecified;
     for (var music in musics) {
       _states.putIfAbsent(music.path, () => state);

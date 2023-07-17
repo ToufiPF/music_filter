@@ -7,7 +7,6 @@ import '../models/music_folder.dart';
 import '../models/state_store.dart';
 import '../providers/folders.dart';
 import '../providers/playlist.dart';
-import 'context_menu.dart';
 
 class CurrentFolderNotifier extends ChangeNotifier {
   CurrentFolderNotifier(this.current);
@@ -29,18 +28,6 @@ class CurrentFolderNotifier extends ChangeNotifier {
 
 class FileView extends StatelessWidget {
   static const tag = "FileView";
-
-  /// Actions that will popup when clicking on the "..." next to a file/folder item
-  static const filePopupActions = [
-    MenuAction.startFiltering,
-    MenuAction.export,
-    MenuAction.delete,
-  ];
-  static const dirPopupActions = [
-    MenuAction.startFiltering,
-    MenuAction.export,
-    MenuAction.delete,
-  ];
 
   const FileView({super.key, required this.root});
 
@@ -67,7 +54,7 @@ class FileView extends StatelessWidget {
                     icon: Icon(Icons.drive_folder_upload),
                     onPressed: current.canGoUp ? current.goUp : null,
                   ),
-                  trailing: _trailingFolderIcon(context, current.current),
+                  trailing: _trailingFolderWidget(context, current.current),
                 ),
                 Consumer2<ShowHiddenFilesNotifier, ShowEmptyFoldersNotifier>(
                     builder: (context, hidden, empty, child) {
@@ -113,8 +100,11 @@ class FileView extends StatelessWidget {
             final folder = folders[index];
             return ListTile(
               title: Text(folder.folderName),
-              leading: Icon(Icons.folder_outlined),
-              trailing: _trailingFolderIcon(context, folder),
+              leading: IconButton(
+                  icon: Icon(Icons.rule_folder_rounded),
+                  onPressed: () =>
+                      _startFiltering(context, folder.allDescendants)),
+              trailing: _trailingFolderWidget(context, folder),
               onTap: () => current.goTo(folder),
             );
           } else {
@@ -122,69 +112,47 @@ class FileView extends StatelessWidget {
             final music = musics[index];
             return ListTile(
               title: Text(music.filename),
-              onTap: null,
-              trailing: PopupMenuButton<int>(
-                itemBuilder: (context) => [
-                  for (var action in filePopupActions)
-                    PopupMenuItem<int>(
-                        value: action.index, child: Text(action.text)),
-                ],
-                child: Icon(Icons.more_vert, size: 32),
-                onSelected: (index) => _onMusicPopupMenuAction(
-                    context, MenuAction.values[index], music),
-              ),
+              leading: Icon(Icons.playlist_add),
+              onTap: () => _startFiltering(context, [music]),
+              trailing: _trailingFileWidget(context, music),
             );
           }
         });
   }
 
-  Widget _trailingFolderIcon(BuildContext context, MusicFolder dir) =>
-      PopupMenuButton<int>(
-        itemBuilder: (context) => [
-          for (var action in dirPopupActions)
-            PopupMenuItem<int>(value: action.index, child: Text(action.text)),
+  Widget _trailingFolderWidget(BuildContext context, MusicFolder dir) => Row(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          IconButton(
+              onPressed: () => _export(context, dir.allDescendants),
+              icon: Icon(Icons.done_all)),
         ],
-        child: Icon(Icons.more_vert, size: 32),
-        onSelected: (index) =>
-            _onFolderPopupMenuAction(context, MenuAction.values[index], dir),
       );
 
-  Future<void> _onFolderPopupMenuAction(
-      BuildContext context, MenuAction action, MusicFolder e) async {
+  Widget _trailingFileWidget(BuildContext context, Music music) => Row(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          IconButton(
+              onPressed: () => _export(context, [music]),
+              icon: Icon(Icons.done)),
+        ],
+      );
+
+  Future<void> _startFiltering(BuildContext context, List<Music> musics) async {
     final playlist = Provider.of<PlayerQueueNotifier>(context, listen: false);
     final store = Provider.of<StateStore>(context, listen: false);
-
-    switch (action) {
-      case MenuAction.startFiltering:
-        final musics = e.allDescendants;
-        debugPrint("[$tag] Adding $musics to playlist");
-        await playlist.appendAll(musics);
-        await store.startTracking(e, e.allDescendants);
-        break;
-      case MenuAction.delete:
-        break;
-      default:
-        throw StateError("Clicked on unsupported menu item $action");
-    }
+    debugPrint("[$tag]_startFiltering($musics)");
+    await playlist.appendAll(musics);
+    await store.startTracking(musics);
   }
 
-  Future<void> _onMusicPopupMenuAction(
-      BuildContext context, MenuAction action, Music e) async {
-    final current = Provider.of<CurrentFolderNotifier>(context, listen: false);
+  Future<void> _export(BuildContext context, List<Music> musics) async {
     final playlist = Provider.of<PlayerQueueNotifier>(context, listen: false);
     final store = Provider.of<StateStore>(context, listen: false);
-
-    switch (action) {
-      case MenuAction.startFiltering:
-        final musics = [e];
-        debugPrint("[$tag] Adding $musics to playlist");
-        await playlist.appendAll(musics);
-        await store.startTracking(current.current, musics);
-        break;
-      case MenuAction.delete:
-        break;
-      default:
-        throw StateError("Clicked on unsupported menu item $action");
-    }
+    debugPrint("[$tag]_export($musics)");
+    await playlist.removeAll(musics);
+    await store.exportState(musics);
   }
 }

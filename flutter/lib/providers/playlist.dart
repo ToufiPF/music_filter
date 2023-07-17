@@ -3,6 +3,7 @@ import 'package:flutter/widgets.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:path/path.dart' as p;
 
+import '../misc.dart';
 import '../models/music.dart';
 import '../providers/root_folder.dart';
 
@@ -12,7 +13,10 @@ mixin PlayerQueueNotifier on ChangeNotifier {
   List<Music> get queue;
 
   /// Append all musics to the end of the queue
-  Future<void> appendAll(List<Music> musics);
+  Future<void> appendAll(Iterable<Music> musics);
+
+  /// Remove all occurrences of the given musics from the queue.
+  Future<void> removeAll(Iterable<Music> musics);
 
   /// Insert a music to the given index
   Future<void> insert(int index, Music music);
@@ -41,7 +45,7 @@ class JustAudioQueueNotifier extends ChangeNotifier with PlayerQueueNotifier {
   List<Music> get queue => _currentQueue.toList(growable: false);
 
   @override
-  Future<void> appendAll(List<Music> musics) async {
+  Future<void> appendAll(Iterable<Music> musics) async {
     _currentQueue.addAll(musics);
     await _source
         .addAll(musics.map((e) => _musicToSource(e)).toList(growable: false));
@@ -50,9 +54,30 @@ class JustAudioQueueNotifier extends ChangeNotifier with PlayerQueueNotifier {
   }
 
   @override
+  Future<void> removeAll(Iterable<Music> musics) async {
+    final copy = musics.toSet();
+    final indices = _currentQueue.indexed
+        .where((pair) => copy.contains(pair.$2))
+        .map((e) => e.$1)
+        .toList(growable: false);
+
+    final ranges = indices.collapseToRanges();
+    // because we incrementally delete entries from the queue,
+    int cumulatedLength = 0;
+    for (var (start, len) in ranges) {
+      start -= cumulatedLength;
+      _currentQueue.removeRange(start, start + len);
+      await _source.removeRange(start, start + len);
+
+      cumulatedLength += len;
+    }
+    notifyListeners();
+  }
+
+  @override
   Future<void> insert(int index, Music music) async {
     _currentQueue.insert(index, music);
-    await _source.add(_musicToSource(music));
+    await _source.insert(index, _musicToSource(music));
     notifyListeners();
   }
 

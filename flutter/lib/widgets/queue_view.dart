@@ -7,9 +7,6 @@ import '../providers/playlist.dart';
 import 'context_menu.dart';
 
 class QueueView extends StatelessWidget {
-  /// Actions that will popup when clicking on the "..." next to a queue item
-  static const popupActions = [MenuAction.removeFromPlaylist];
-
   static const prototype = ListTile(
       title: Text("Filename"),
       subtitle: Text("Artist - Album"),
@@ -83,20 +80,9 @@ class QueueView extends StatelessWidget {
                 IconActions.keptMusicAction(context, music, snapshot.data!),
                 IconActions.deleteMusicAction(context, music, snapshot.data!),
                 PopupMenuButton<int>(
-                  child: Icon(Icons.more_vert, size: 32),
-                  itemBuilder: (context) => [
-                    for (var action in popupActions)
-                      PopupMenuItem<int>(
-                          value: action.index, child: Text(action.text)),
-                  ],
-                  onSelected: (selectedAction) => _onPopupMenuAction(
-                    context,
-                    queue,
-                    player,
-                    MenuAction.values[selectedAction],
-                    musicIdx,
-                  ),
-                ),
+                    child: Icon(Icons.more_vert, size: 32),
+                    itemBuilder: (context) => [],
+                    onSelected: (selectedAction) {}),
               ],
             );
           }),
@@ -110,21 +96,5 @@ class QueueView extends StatelessWidget {
         player.play(index: musicIdx);
       },
     );
-  }
-
-  Future<void> _onPopupMenuAction(
-    BuildContext context,
-    PlayerQueueNotifier queue,
-    PlayerStateController player,
-    MenuAction action,
-    int musicIdx,
-  ) async {
-    switch (action) {
-      case MenuAction.removeFromPlaylist:
-        queue.removeAt(musicIdx);
-        break;
-      default:
-        throw UnsupportedError("Clicked on unsupported menu item $action");
-    }
   }
 }

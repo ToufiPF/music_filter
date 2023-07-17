@@ -30,7 +30,7 @@ mixin StateStore on ChangeNotifier {
 
   /// Registers the given musics into the [StateStore]
   /// their default state is [KeepState.unspecified]
-  Future<void> startTracking(MusicFolder parent, List<Music> musics);
+  Future<void> startTracking(List<Music> musics);
 
   /// Dumps a (long) string that describes the state of the given musics
   /// to the given [IOSink], typically an open [File].

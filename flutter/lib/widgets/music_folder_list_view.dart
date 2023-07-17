@@ -36,9 +36,5 @@ class _MusicFolderListViewState extends State<MusicFolderListView> {
                 );
               },
             )
-          : MusicListView(
-              musics: shownContent!.musics,
-              popupActions: [],
-              onSelected: (context, musicIdx, action) {},
-            ));
+          : MusicListView(musics: shownContent!.musics));
 }

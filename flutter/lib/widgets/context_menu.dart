@@ -6,19 +6,6 @@ import '../models/music.dart';
 import '../models/music_folder.dart';
 import '../models/state_store.dart';
 
-enum MenuAction {
-  startFiltering("Start filtering"),
-  removeFromPlaylist("Remove from playlist"),
-  export("Export"),
-  restore("Restore"),
-  delete("Delete"),
-  ;
-
-  const MenuAction(this.text);
-
-  final String text;
-}
-
 class IconActions {
   static Widget exportActionFolder(
     BuildContext context,
