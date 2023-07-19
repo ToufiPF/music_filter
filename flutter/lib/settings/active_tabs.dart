@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:ui';
 
+import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:pref/pref.dart';
@@ -74,7 +75,8 @@ List<AvailableTab> decodeAvailableTabs(String jsonStr) {
   final List<(String, bool)> active = _decodeFromJson(jsonStr);
   return active
       .where((e) => e.$2)
-      .map((e) => AvailableTab.fromId(e.$1)!)
+      .map((e) => AvailableTab.fromId(e.$1))
+      .whereNotNull()
       .toList(growable: false);
 }
 

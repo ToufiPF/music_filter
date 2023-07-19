@@ -34,13 +34,16 @@ class QueueView extends StatelessWidget {
             ? Center(
                 child: Text("Nothing to play !\n"
                     "Start by adding some songs to the queue"))
-            : ListView.builder(
+            : ReorderableListView.builder(
                 physics: NeverScrollableScrollPhysics(),
+                buildDefaultDragHandles: false,
                 shrinkWrap: true,
                 prototypeItem: prototype,
                 itemCount: queue.queue.length,
+                onReorder: queue.move,
                 // Trigger rebuild only if currently played index goes to != to == or vice-versa
                 itemBuilder: (context, musicIdx) => StreamBuilder<bool>(
+                    key: Key(musicIdx.toString()),
                     initialData: player.indexInPlaylist == musicIdx,
                     stream: player.indexInPlaylistStream
                         .map((currentIdx) => currentIdx == musicIdx),

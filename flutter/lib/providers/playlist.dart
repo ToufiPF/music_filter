@@ -24,6 +24,10 @@ mixin PlayerQueueNotifier on ChangeNotifier {
   /// Remove the item at the given index from the queue
   Future<void> removeAt(int index);
 
+  /// Moves the music at the given [oldIndex] to the [newIndex]
+  /// [newIndex] is the place where the item would be inserted in the original list
+  Future<void> move(int oldIndex, int newIndex);
+
   /// Empties the queue
   Future<void> clear();
 }
@@ -85,6 +89,18 @@ class JustAudioQueueNotifier extends ChangeNotifier with PlayerQueueNotifier {
   Future<void> removeAt(int index) async {
     _currentQueue.removeAt(index);
     await _source.removeAt(index);
+    notifyListeners();
+  }
+
+  @override
+  Future<void> move(int oldIndex, int newIndex) async {
+    if (oldIndex < newIndex) {
+      newIndex -= 1;
+    }
+    final music = _currentQueue.removeAt(oldIndex);
+    _currentQueue.insert(newIndex, music);
+    // TODO test whether to call this before or after decrementing newIndex
+    await _source.move(oldIndex, newIndex);
     notifyListeners();
   }
 
