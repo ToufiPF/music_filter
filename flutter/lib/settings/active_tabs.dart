@@ -23,14 +23,6 @@ enum AvailableTab {
     iconSelected: Icons.queue_music,
     alwaysActive: false,
   ),
-  openMusics(
-    id: "open_musics",
-    label: "Open",
-    appBarTitle: "Open folders",
-    iconDefault: Icons.music_note_outlined,
-    iconSelected: Icons.music_note,
-    alwaysActive: false,
-  ),
   settings(
     id: "settings",
     label: "Settings",

@@ -7,7 +7,6 @@ import '../providers/root_folder.dart';
 import '../settings/active_tabs.dart';
 import '../settings/settings.dart';
 import '../widgets/file_view.dart';
-import '../widgets/open_folder_view.dart';
 import '../widgets/player_widget.dart';
 import '../widgets/queue_view.dart';
 
@@ -73,10 +72,6 @@ class _HomePageState extends State<HomePage> {
             }
           }),
         AvailableTab.queue => QueueView(),
-        // Must wrap in builder to re-generate a stream each time this widget is shown,
-        // otherwise changing tab disposes of the widget and cancels the stream
-        // => bad state stream already listened to
-        AvailableTab.openMusics => OpenMusicView(),
         AvailableTab.settings => SettingsPage(),
       };
 }
