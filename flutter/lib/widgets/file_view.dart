@@ -108,7 +108,7 @@ class FileView extends StatelessWidget {
               leading: Selector<StateStore, bool>(
                 selector: (context, store) => store.isTrackedFolder(folder),
                 builder: (context, isTracked, child) => isTracked
-                    ? Icon(Icons.folder)
+                    ? Icon(Icons.folder_open_outlined)
                     : Icon(Icons.folder_outlined),
               ),
               trailing: _trailingFolderWidget(context, folder),
@@ -119,7 +119,6 @@ class FileView extends StatelessWidget {
             final music = musics[index];
             return ListTile(
               title: Text(music.filename),
-              leading: Icon(Icons.playlist_add),
               onTap: () async {
                 await playlist.appendAll([music]);
                 await store.startTracking([music]);
