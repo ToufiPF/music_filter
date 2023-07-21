@@ -43,14 +43,14 @@ def prompt_for_proceed() -> bool:
 
 def run_directives(src_dir: 'Path', dst_dir: 'Path', directives: 'dict[Path, str]', default_state: State):
     copied = 0
-    dropped: 'set[Path]' = set()
+    dropped: 'set[str]' = set()
     for relative, state in directives.items():
         if state == State.unspecified:
             state = default_state
 
+        path = src_dir / relative
+        dest = dst_dir / relative
         if state == State.kept:
-            path = src_dir / relative
-            dest = dst_dir / relative
             if path.exists():
                 copied += 1
                 dest.parent.mkdir(parents=True, exist_ok=True)
@@ -58,13 +58,13 @@ def run_directives(src_dir: 'Path', dst_dir: 'Path', directives: 'dict[Path, str
             else:
                 logging.error('File at %s does not exist', path)
         else:
-            dropped += path
+            dropped.add(path.as_posix())
 
     logging.info('%s out of %s copied', copied, len(directives))
     if dropped:
         print('The following files will be deleted:')
         for p in dropped:
-            print(f"- {p.as_posix()}")
+            print(f"- {p}")
 
         proceed = prompt_for_proceed()
         if proceed:
