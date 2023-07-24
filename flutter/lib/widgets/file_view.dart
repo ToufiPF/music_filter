@@ -62,7 +62,6 @@ class FileView extends StatelessWidget {
                   final (folders, musics) = _getEntriesToShow(current.current,
                       showHidden: hidden.show, showEmpty: empty.show);
 
-                  debugPrint("[$tag]: build: $current");
                   if (folders.isEmpty && musics.isEmpty) {
                     return Text("Empty");
                   } else {

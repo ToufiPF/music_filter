@@ -213,10 +213,10 @@ packages:
     dependency: transitive
     description:
       name: dartx
-      sha256: "45d7176701f16c5a5e00a4798791c1964bc231491b879369c818dd9a9c764871"
+      sha256: "8b25435617027257d43e6508b5fe061012880ddfdaa75a71d607c3de2a13d244"
       url: "https://pub.dev"
     source: hosted
-    version: "1.1.0"
+    version: "1.2.0"
   device_info_plus:
     dependency: "direct main"
     description:
@@ -261,10 +261,10 @@ packages:
     dependency: "direct main"
     description:
       name: file_picker
-      sha256: b1729fc96627dd44012d0a901558177418818d6bd428df59dcfeb594e5f66432
+      sha256: "21145c9c268d54b1f771d8380c195d2d6f655e0567dc1ca2f9c134c02c819e0a"
       url: "https://pub.dev"
     source: hosted
-    version: "5.3.2"
+    version: "5.3.3"
   fixnum:
     dependency: transitive
     description:
@@ -580,10 +580,10 @@ packages:
     dependency: transitive
     description:
       name: permission_handler_android
-      sha256: c0c9754479a4c4b1c1f3862ddc11930c9b3f03bef2816bb4ea6eed1e13551d6f
+      sha256: "2ffaf52a21f64ac9b35fe7369bb9533edbd4f698e5604db8645b1064ff4cf221"
       url: "https://pub.dev"
     source: hosted
-    version: "10.3.2"
+    version: "10.3.3"
   permission_handler_apple:
     dependency: transitive
     description:
@@ -620,10 +620,10 @@ packages:
     dependency: transitive
     description:
       name: plugin_platform_interface
-      sha256: "6a2128648c854906c53fa8e33986fc0247a1116122f9534dd20e3ab9e16a32bc"
+      sha256: "43798d895c929056255600343db8f049921cbec94d31ec87f1dc5c16c01935dd"
       url: "https://pub.dev"
     source: hosted
-    version: "2.1.4"
+    version: "2.1.5"
   pool:
     dependency: transitive
     description:
