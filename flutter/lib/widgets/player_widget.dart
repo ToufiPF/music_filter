@@ -20,7 +20,7 @@ class PlayerWidget extends StatelessWidget {
             Row(
               children: [
                 Expanded(child: MediaButtonsWidget(iconSize: mediaIconsSize)),
-                NextKeepStateWidget(iconSize: actionIconsSize),
+                CurrentlyPlayingKeepStateWidget(iconSize: actionIconsSize),
               ],
             ),
             Padding(

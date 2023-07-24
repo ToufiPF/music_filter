@@ -4,22 +4,20 @@ import 'package:provider/provider.dart';
 import '../models/state_store.dart';
 import '../providers/player.dart';
 import '../providers/playlist.dart';
-import 'context_menu.dart';
+import '../widgets/context_menu.dart';
+import '../widgets/player/state.dart';
 
 class QueueView extends StatelessWidget {
+  static const double iconSize = 32;
   static const prototype = ListTile(
       title: Text("Filename"),
       subtitle: Text("Artist - Album"),
       dense: true,
       leading: Icon(Icons.play_arrow),
       trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.end,
-        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          IconButton(onPressed: null, icon: Icon(Icons.save)),
-          IconButton(onPressed: null, icon: Icon(Icons.delete_forever)),
-          IconButton(onPressed: null, icon: Icon(Icons.more_vert)),
+          KeepStateWidget(music: null, iconSize: iconSize),
+          Icon(Icons.check, size: iconSize),
         ],
       ));
 
@@ -73,21 +71,16 @@ class QueueView extends StatelessWidget {
       subtitle: Text(music.displayArtist, maxLines: 1),
       leading:
           Icon(isSongPlaying ? Icons.play_arrow : Icons.play_arrow_outlined),
-      trailing: StreamBuilder<KeepState>(
-          initialData: KeepState.unspecified,
-          stream: store.watchState(music, fireImmediately: true),
-          builder: (context, snapshot) {
-            return Row(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.end,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                IconActions.keptMusicAction(context, music, snapshot.data!),
-                IconActions.deleteMusicAction(context, music, snapshot.data!),
-                IconActions.exportActionMusic(context, music, snapshot.data!),
-              ],
-            );
-          }),
+      trailing: Row(
+        children: [
+          KeepStateWidget(music: music, iconSize: iconSize),
+          StreamBuilder<KeepState>(
+              initialData: KeepState.unspecified,
+              stream: store.watchState(music, fireImmediately: true),
+              builder: (context, snapshot) => IconActions.exportActionMusic(
+                  context, music, snapshot.data!)),
+        ],
+      ),
       onTap: () {
         // if song is currently playing, don't call play()
         // as this would reset the time to 0
