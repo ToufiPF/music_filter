@@ -109,6 +109,9 @@ def setup_parser() -> 'ap.ArgumentParser':
                         help="State to fallback on when left on 'unspecified'. "
                         "Defaults to 'None' in which case the user will be prompted to choose between 'kept' and 'deleted'")
 
+    parser.add_argument('--keep_directives', action='store_true', help='Whether to keep directives file when done filtering')
+    parser.add_argument('--delete_directives', action='store_true', help='Whether to delete directives file when done filtering')
+
     return parser
 
 
@@ -120,3 +123,13 @@ if __name__ == '__main__':
 
     run_directives(args.src_dir, args.dst_dir, directives,
                    default_state=args.default_state)
+
+    if args.keep_directives:
+        delete = False
+    elif args.delete_directives:
+        delete = True
+    else:
+        delete = prompt_for_proceed(f'Remove directives file ({args.directives_path})?')
+
+    if delete:
+        args.directives_path.unlink(missing_ok=True)
