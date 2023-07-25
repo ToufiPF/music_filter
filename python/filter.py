@@ -14,7 +14,7 @@ class State(StrEnum):
 
 
 def read_directives(path: 'Path') -> 'dict[str, State]':
-    df = pd.read_csv(path, header=None, usecols=[0, 1], 
+    df = pd.read_csv(path, header=None, usecols=[0, 1],
                      dtype={'filepath': str, 'state': str})
 
     res = dict()
@@ -26,7 +26,7 @@ def read_directives(path: 'Path') -> 'dict[str, State]':
 
 
 def is_empty(path: 'Path') -> bool:
-    assert path.is_dir(), f"Called is_empty on {path} which is not a directory"
+    assert path.is_dir(), f"Called is_empty() on {path} which is not a directory"
     return next(path.iterdir(), None) is None
 
 
@@ -54,7 +54,7 @@ def run_directives(src_dir: 'Path', dst_dir: 'Path', directives: 'dict[Path, str
             if path.exists():
                 copied += 1
                 dest.parent.mkdir(parents=True, exist_ok=True)
-                shutil.copy(path, dst_dir)
+                shutil.copy(path, dest)
             else:
                 logging.error('File at %s does not exist', path)
         else:
