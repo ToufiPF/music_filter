@@ -30,9 +30,9 @@ def is_empty(path: 'Path') -> bool:
     return next(path.iterdir(), None) is None
 
 
-def prompt_for_proceed() -> bool:
+def prompt_for_proceed(prompt: str) -> bool:
     while True:
-        res = input('Continue ? (y/n) ').lower()
+        res = input(f'{prompt} (y/n) ').lower()
         if res in ('y', 'yes', 'oui'):
             return True
         elif res in ('n', 'no', 'non'):
@@ -41,40 +41,56 @@ def prompt_for_proceed() -> bool:
             print(f'Invalid response {res}.')
 
 
-def run_directives(src_dir: 'Path', dst_dir: 'Path', directives: 'dict[Path, str]', default_state: State):
+def run_directives(src_dir: 'Path', dst_dir: 'Path', directives: 'dict[Path, str]', default_state: 'State | None'):
     copied = 0
-    dropped: 'set[str]' = set()
-    for relative, state in directives.items():
-        if state == State.unspecified:
-            state = default_state
+
+    sorted: 'dict[State, set[str]]' = {
+        State.kept: set(),
+        State.deleted: set(),
+        State.unspecified: set(),
+    }
+
+    for relative, directive in directives.items():
+        if directive == State.unspecified:
+            if default_state is None:
+                delete = prompt_for_proceed('Delete undecided musics?')
+                default_state = State.deleted if delete else State.kept
+            action = default_state
+        else:
+            action = directive
+
+        sorted[directive].add(relative)
 
         path = src_dir / relative
         dest = dst_dir / relative
-        if state == State.kept:
+        if action == State.kept:
             if path.exists():
                 copied += 1
                 dest.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copy(path, dest)
             else:
                 logging.error('File at %s does not exist', path)
-        else:
-            dropped.add(path.as_posix())
 
     logging.info('%s out of %s copied', copied, len(directives))
+    dropped = sorted[State.deleted]
+    if default_state == State.deleted:
+        dropped |= sorted[State.unspecified]
+
     if dropped:
         print('The following files will be deleted:')
         for p in dropped:
             print(f"- {p}")
 
-        proceed = prompt_for_proceed()
+        proceed = prompt_for_proceed('Continue?')
         if proceed:
             for relative in directives.keys():
                 p = src_dir / relative
                 p.unlink(missing_ok=True)
                 try:
-                    while p != src_dir and is_empty(p.parent):
-                        p = p.parent
+                    p = p.parent
+                    while p != src_dir and is_empty(p):
                         p.rmdir()
+                        p = p.parent
                 except Exception as e:
                     logging.error(f'Could not remove empty folder {p} : {e}')
         else:
@@ -89,8 +105,9 @@ def setup_parser() -> 'ap.ArgumentParser':
     parser.add_argument('src_dir', type=Path)
     parser.add_argument('dst_dir', type=Path)
 
-    parser.add_argument('--default_state', type=State, choices=[State.kept, State.deleted], default=State.kept,
-                        help="State to fallback on when left on 'unspecified'. Defaults to 'kept'")
+    parser.add_argument('--default_state', type=State, choices=[State.kept, State.deleted], default=None,
+                        help="State to fallback on when left on 'unspecified'. "
+                        "Defaults to 'None' in which case the user will be prompted to choose between 'kept' and 'deleted'")
 
     return parser
 
