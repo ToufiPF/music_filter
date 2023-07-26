@@ -15,6 +15,8 @@ class QueueView extends StatelessWidget {
       dense: true,
       leading: Icon(Icons.play_arrow),
       trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           KeepStateWidget(music: null, iconSize: iconSize),
           Icon(Icons.check, size: iconSize),
@@ -72,6 +74,8 @@ class QueueView extends StatelessWidget {
       leading:
           Icon(isSongPlaying ? Icons.play_arrow : Icons.play_arrow_outlined),
       trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           KeepStateWidget(music: music, iconSize: iconSize),
           StreamBuilder<KeepState>(

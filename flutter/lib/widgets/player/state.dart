@@ -29,7 +29,8 @@ class KeepStateWidget extends StatelessWidget {
           return IconButton(
             onPressed: music != null
                 ? () {
-                    Fluttertoast.showToast(msg: "Marked as $nextState");
+                    Fluttertoast.cancel().then((_) =>
+                        Fluttertoast.showToast(msg: "Marked as $nextState"));
                     store.markAs(music!, nextState);
                   }
                 : null,
