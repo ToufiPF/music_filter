@@ -1,19 +1,23 @@
 import 'dart:io';
 
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 
 import 'music.dart';
 import 'music_folder.dart';
 
 enum KeepState {
   /// default state, never explicitly kept or deleted
-  unspecified,
+  unspecified(Icons.restore),
 
   /// user marked the music as kept
-  kept,
+  kept(Icons.save),
 
   /// user marked the music as deleted
-  deleted;
+  deleted(Icons.delete_forever);
+
+  const KeepState(this.icon);
+
+  final IconData icon;
 
   @override
   String toString() => switch (this) {

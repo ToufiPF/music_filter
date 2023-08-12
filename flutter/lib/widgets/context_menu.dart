@@ -116,7 +116,6 @@ class IconActions {
   ) =>
       _musicAction(
         KeepState.kept,
-        Icons.save,
         context,
         music,
         currentState,
@@ -129,7 +128,6 @@ class IconActions {
   ) =>
       _musicAction(
         KeepState.deleted,
-        Icons.delete_forever,
         context,
         music,
         currentState,
@@ -137,18 +135,19 @@ class IconActions {
 
   static Widget _musicAction(
     KeepState targetState,
-    IconData icon,
     BuildContext context,
     Music music,
     KeepState currentState,
-  ) {
+  ) =>
+      currentState != targetState
+          ? _markAsAction(targetState, context, music)
+          : _markAsAction(KeepState.unspecified, context, music);
+
+  static Widget _markAsAction(
+      KeepState state, BuildContext context, Music music) {
     final store = Provider.of<StateStore>(context, listen: false);
-    return currentState != targetState
-        ? IconButton(
-            onPressed: () => store.markAs(music, targetState), icon: Icon(icon))
-        : IconButton(
-            onPressed: () => store.markAs(music, KeepState.unspecified),
-            icon: Icon(Icons.restore));
+    return IconButton(
+        icon: Icon(state.icon), onPressed: () => store.markAs(music, state));
   }
 
   IconActions._();
