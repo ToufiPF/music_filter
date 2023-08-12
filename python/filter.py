@@ -1,8 +1,10 @@
 #!python3
 import argparse as ap
-import pandas as pd
-import shutil
 import logging
+import os
+import pandas as pd
+import stat
+import shutil
 from pathlib import Path
 from enum import StrEnum, auto
 
@@ -26,8 +28,18 @@ def read_directives(path: 'Path') -> 'dict[str, State]':
 
 
 def is_empty(path: 'Path') -> bool:
+    """ Returns whether the given path is a directory containing only non-music files (e.g. album covers). """
     assert path.is_dir(), f"Called is_empty() on {path} which is not a directory"
-    return next(path.iterdir(), None) is None
+    music_extensions = set(('.mp3', '.flac', '.wav', '.ogg'))
+
+    return all(f.is_file() and not f.suffix.lower() in music_extensions for f in path.iterdir())
+
+def on_rmtree_error(func, path, exc_info):
+    try:
+        os.chmod(path, stat.S_IWRITE)
+        func(path)
+    except Exception as e:
+        logging.error(f'Could not remove {path} : {e}')
 
 
 def prompt_for_proceed(prompt: str) -> bool:
@@ -63,13 +75,16 @@ def run_directives(src_dir: 'Path', dst_dir: 'Path', directives: 'dict[Path, str
 
         path = src_dir / relative
         dest = dst_dir / relative
-        if action == State.kept:
-            if path.exists():
+
+        if path.exists():
+            path.chmod(stat.S_IWRITE)
+
+            if action == State.kept:
                 copied += 1
                 dest.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copy(path, dest)
-            else:
-                logging.error('File at %s does not exist', path)
+        else:
+            logging.error('File at %s does not exist', path)
 
     logging.info('%s out of %s copied', copied, len(directives))
     dropped = sorted[State.deleted]
@@ -88,8 +103,9 @@ def run_directives(src_dir: 'Path', dst_dir: 'Path', directives: 'dict[Path, str
                 p.unlink(missing_ok=True)
                 try:
                     p = p.parent
-                    while p != src_dir and is_empty(p):
-                        p.rmdir()
+                    while p != src_dir and p.exists() and is_empty(p):
+                        p.chmod(stat.S_IWRITE)
+                        shutil.rmtree(p, onerror=on_rmtree_error)
                         p = p.parent
                 except Exception as e:
                     logging.error(f'Could not remove empty folder {p} : {e}')
@@ -109,8 +125,10 @@ def setup_parser() -> 'ap.ArgumentParser':
                         help="State to fallback on when left on 'unspecified'. "
                         "Defaults to 'None' in which case the user will be prompted to choose between 'kept' and 'deleted'")
 
-    parser.add_argument('--keep_directives', action='store_true', help='Whether to keep directives file when done filtering')
-    parser.add_argument('--delete_directives', action='store_true', help='Whether to delete directives file when done filtering')
+    parser.add_argument('--keep_directives', action='store_true',
+                        help='Whether to keep directives file when done filtering')
+    parser.add_argument('--delete_directives', action='store_true',
+                        help='Whether to delete directives file when done filtering')
 
     return parser
 
@@ -129,7 +147,8 @@ if __name__ == '__main__':
     elif args.delete_directives:
         delete = True
     else:
-        delete = prompt_for_proceed(f'Remove directives file ({args.directives_path})?')
+        delete = prompt_for_proceed(
+            f'Remove directives file ({args.directives_path})?')
 
     if delete:
         args.directives_path.unlink(missing_ok=True)
