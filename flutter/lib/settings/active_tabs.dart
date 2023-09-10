@@ -24,6 +24,14 @@ enum AvailableTab {
     iconSelected: Icons.queue_music,
     alwaysActive: false,
   ),
+  recycleBin(
+    id: "recycleBin",
+    label: "Committed",
+    appBarTitle: "Recycle Bin",
+    iconDefault: Icons.restore_from_trash_outlined,
+    iconSelected: Icons.restore_from_trash,
+    alwaysActive: false,
+  ),
   settings(
     id: "settings",
     label: "Settings",

@@ -13,7 +13,7 @@ import 'music_folder_volatile.dart';
 import 'state_store.dart';
 
 class VolatileStateStore extends ChangeNotifier with StateStore {
-  static final DateFormat fmt = DateFormat("YYYYmmdd_HHMMss");
+  static final DateFormat fmt = DateFormat("YYYYMMdd_HHmmss");
   final Map<String, KeepState> _states = {};
   final Map<String, List<StreamController<KeepState>>> _controllers = {};
 
@@ -40,10 +40,9 @@ class VolatileStateStore extends ChangeNotifier with StateStore {
   void _onRootChanged() async {
     final folder = root.rootFolder;
     if (folder != null) {
-      final file = File(p.join(folder.path, "export.csv"));
-      if (!await file.parent.exists()) {
-        await file.parent.create(recursive: true);
-      }
+      final now = DateTime.now();
+      final file = File(p.join(folder.path, "export_${fmt.format(now)}.csv"));
+      await file.parent.create(recursive: true);
       _sink = file.openWrite(mode: FileMode.writeOnlyAppend);
     } else {
       await _sink?.flush();

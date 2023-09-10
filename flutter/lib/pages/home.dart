@@ -9,6 +9,7 @@ import '../settings/settings.dart';
 import '../widgets/file_view.dart';
 import '../widgets/player_widget.dart';
 import '../widgets/queue_view.dart';
+import '../widgets/recycle_bin_view.dart';
 
 /// Home page for the app
 class HomePage extends StatefulWidget {
@@ -72,6 +73,7 @@ class _HomePageState extends State<HomePage> {
             }
           }),
         AvailableTab.queue => QueueView(),
+        AvailableTab.recycleBin => RecycleBinView(),
         AvailableTab.settings => SettingsPage(),
       };
 }
