@@ -5,6 +5,7 @@ import 'package:pref/pref.dart';
 import 'package:provider/provider.dart';
 
 import '../models/catalog.dart';
+import '../models/state_store.dart';
 import '../providers/root_folder.dart';
 import 'active_tabs.dart';
 
@@ -75,10 +76,15 @@ class SettingsPage extends StatelessWidget {
           ),
           PrefButton(
             child: Text("Restore musics in recycle bin"),
-            onTap: () {
-              // TODO: should erase stuff from csv to be consistent
+            onTap: () async {
               final catalog = Provider.of<Catalog>(context, listen: false);
-              catalog.restore(catalog.recycleBin?.allDescendants ?? []);
+              final store = Provider.of<StateStore>(context, listen: false);
+              final musics = catalog.recycleBin?.allDescendants ?? [];
+
+              await Future.forEach(
+                  musics, (e) => store.markAs(e, KeepState.unspecified));
+              await store.exportState(musics);
+              await catalog.restore(musics);
             },
           ),
           PrefButton(
