@@ -13,7 +13,7 @@ import 'music_folder_volatile.dart';
 import 'state_store.dart';
 
 class VolatileStateStore extends ChangeNotifier with StateStore {
-  static final DateFormat fmt = DateFormat("YYYYMMdd_HHmmss");
+  static final DateFormat fmt = DateFormat("yyyyMMdd");
   final Map<String, KeepState> _states = {};
   final Map<String, List<StreamController<KeepState>>> _controllers = {};
 
