@@ -41,7 +41,7 @@ class VolatileStateStore extends ChangeNotifier with StateStore {
     final folder = root.rootFolder;
     if (folder != null) {
       final now = DateTime.now();
-      final file = File(p.join(folder.path, "export_${fmt.format(now)}.csv"));
+      final file = File(p.join(folder.path, "export.csv"));
       await file.parent.create(recursive: true);
       _sink = file.openWrite(mode: FileMode.writeOnlyAppend);
     } else {
