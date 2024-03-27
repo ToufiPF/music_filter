@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:music_filter/misc.dart';
+import 'package:music_filter/util/misc.dart';
 
 void main() {
   test('Collapse indices empty', () {

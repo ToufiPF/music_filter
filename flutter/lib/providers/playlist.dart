@@ -3,9 +3,9 @@ import 'package:flutter/widgets.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:path/path.dart' as p;
 
-import '../misc.dart';
 import '../models/music.dart';
 import '../providers/root_folder.dart';
+import '../util/misc.dart';
 
 /// Controller/Observer of the currently playing queue
 mixin PlayerQueueNotifier on ChangeNotifier {

@@ -5,8 +5,8 @@ import 'package:flutter/widgets.dart';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart' as p;
 
-import '../misc.dart';
 import '../providers/root_folder.dart';
+import '../util/misc.dart';
 import 'music.dart';
 import 'music_folder.dart';
 import 'music_folder_volatile.dart';
