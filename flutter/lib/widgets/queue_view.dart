@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:path/path.dart' as p;
 
 import '../models/state_store.dart';
 import '../providers/player.dart';
@@ -11,7 +12,15 @@ class QueueView extends StatelessWidget {
   static const double iconSize = 32;
   static const prototype = ListTile(
       title: Text("Filename"),
-      subtitle: Text("Artist - Album"),
+      subtitle: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text("Artist - Album"),
+          Text("filename.ext"),
+        ],
+      ),
+      isThreeLine: true,
       dense: true,
       leading: Icon(Icons.play_arrow),
       trailing: Row(
@@ -70,7 +79,15 @@ class QueueView extends StatelessWidget {
       dense: true,
       selected: isSongPlaying,
       title: Text(music.title ?? music.filename, maxLines: 1),
-      subtitle: Text(music.displayArtist, maxLines: 1),
+      subtitle: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(music.displayArtist, maxLines: 1),
+          Text(p.basename(music.path), maxLines: 1),
+        ],
+      ),
+      isThreeLine: true,
       leading:
           Icon(isSongPlaying ? Icons.play_arrow : Icons.play_arrow_outlined),
       trailing: Row(
