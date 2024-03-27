@@ -38,8 +38,8 @@ dependencies:
   pref: ^2.7.0                  # Preferences screen
   path: ^1.8.3                  # Path manipulation (e.g. os.path.join like)
   path_provider: ^2.0.15        # Paths for storage
-  file_picker: ^6.1.1           # File/Folder picker
-  device_info_plus: ^9.0.0      # OS version code
+  file_picker: ^8.0.0+1           # File/Folder picker
+  device_info_plus: ^10.0.1      # OS version code
   isar: *isar_version           # Local NoSQL DB
   isar_flutter_libs: *isar_version        # contains Isar Core
   flutter_media_metadata: ^1.0.0+1        # Fetch audio tags from File
