@@ -7,6 +7,7 @@ import '../models/music_folder.dart';
 import '../models/state_store.dart';
 import '../providers/folders.dart';
 import '../providers/playlist.dart';
+import '../util/constants.dart';
 import 'context_menu.dart';
 
 class CurrentFolderNotifier extends ChangeNotifier {
@@ -103,7 +104,7 @@ class FileView extends StatelessWidget {
           if (index < folders.length) {
             final folder = folders[index];
             return ListTile(
-              title: Text(folder.folderName),
+              title: Constants.scrollingText(folder.folderName),
               leading: Selector<StateStore, bool>(
                 selector: (context, store) => store.isTrackedFolder(folder),
                 builder: (context, isTracked, child) => isTracked
@@ -117,7 +118,7 @@ class FileView extends StatelessWidget {
             index -= folders.length;
             final music = musics[index];
             return ListTile(
-              title: Text(music.filename),
+              title: Constants.scrollingText(music.filename),
               onTap: () async {
                 await playlist.appendAll([music]);
                 await store.startTracking([music]);

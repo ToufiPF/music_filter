@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../models/music.dart';
 import '../../providers/player.dart';
 import '../../providers/playlist.dart';
+import '../../util/constants.dart';
 
 class PlayingMusicInfoWidget extends StatelessWidget {
   const PlayingMusicInfoWidget({super.key});
@@ -26,8 +27,10 @@ class PlayingMusicInfoWidget extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.start,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Text(music?.title ?? music?.filename ?? "N/A"),
-                    Text("${music?.displayArtist} - ${music?.album}"),
+                    Constants.scrollingText(
+                        music?.title ?? music?.filename ?? "N/A"),
+                    Constants.scrollingText(
+                        "${music?.displayArtist} - ${music?.album}"),
                   ],
                 ),
               );

@@ -5,6 +5,7 @@ import 'package:path/path.dart' as p;
 import '../models/state_store.dart';
 import '../providers/player.dart';
 import '../providers/playlist.dart';
+import '../util/constants.dart';
 import '../widgets/context_menu.dart';
 import '../widgets/player/state.dart';
 
@@ -78,14 +79,14 @@ class QueueView extends StatelessWidget {
     return ListTile(
       dense: true,
       selected: isSongPlaying,
-      title: Text(music.title ?? music.filename, maxLines: 1),
+      title: Constants.scrollingText(music.title ?? music.filename),
       subtitle: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(music.displayArtist, maxLines: 1),
-          Text(p.basename(music.path),
-              maxLines: 1, style: TextStyle(fontStyle: FontStyle.italic)),
+          Constants.scrollingText(music.displayArtist),
+          Constants.scrollingText(p.basename(music.path),
+              style: TextStyle(fontStyle: FontStyle.italic)),
         ],
       ),
       isThreeLine: true,
