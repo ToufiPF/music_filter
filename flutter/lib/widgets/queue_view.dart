@@ -84,7 +84,8 @@ class QueueView extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(music.displayArtist, maxLines: 1),
-          Text(p.basename(music.path), maxLines: 1),
+          Text(p.basename(music.path),
+              maxLines: 1, style: TextStyle(fontStyle: FontStyle.italic)),
         ],
       ),
       isThreeLine: true,
