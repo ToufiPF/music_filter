@@ -1,4 +1,4 @@
-package com.example.music_filter
+package ch.toufi.music_filter
 
 import io.flutter.embedding.android.FlutterActivity
 
