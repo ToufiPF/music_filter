@@ -1,3 +1,8 @@
+import 'dart:collection';
+
+import 'package:path/path.dart' as p;
+
+import '../entities/music.dart';
 
 class MusicFolderDto {
   MusicFolderDto({
@@ -12,7 +17,7 @@ class MusicFolderDto {
   final MusicFolderDto? parent;
 
   /// Children music folder
-  final Dictionary<String, MusicFolderDto> children = [];
+  final Map<String, MusicFolderDto> children = HashMap();
 
   /// Direct children musics
   final List<Music> musics = [];
@@ -30,7 +35,7 @@ class MusicFolderDto {
   /// Collect the list of all musics under that folder (recursively)
   List<Music> get allDescendants {
     final list = musics.toList(growable: true);
-    for (var folder in children) {
+    for (var folder in children.values) {
       list.addAll(folder.allDescendants);
     }
     return list;
@@ -44,7 +49,7 @@ class MusicFolderDto {
     buffer.write("  " * depth);
     buffer.writeln(folderName);
     final nextDepth = depth + 1;
-    for (var f in children) {
+    for (var f in children.values) {
       buffer.write(f.debugToString(depth: nextDepth));
     }
     for (var m in musics) {

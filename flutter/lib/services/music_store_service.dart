@@ -1,61 +1,66 @@
 import 'dart:io';
+
+import 'package:flutter/widgets.dart';
 import 'package:flutter_media_metadata/flutter_media_metadata.dart';
+import 'package:isar/isar.dart';
 import 'package:path/path.dart' as p;
 
-import 'data/entities/music.dart';
+import '../data/entities/music.dart';
+import '../data/enums/state.dart';
+import '../data/models/music_folder.dart';
 
 class MusicStoreService {
   static const String tag = "MusicStoreService";
 
-  final Db db;
-  final DbSet<Music> musics;
+  final Isar db;
+  final IsarCollection<Music> musics;
 
-  MusicStoreService(this.db) {
-    this.musics = this.db.musics;
-  }
+  MusicStoreService(this.db) : musics = db.musics;
 
   /// Empties out the entire Music table
   Future<void> clear() async {
-    await this.musics.clear();
+    await musics.where().deleteAll();
   }
 
   Future<void> deleteTreatedMusicsFromFileStorage(Directory root) async {
-    final toDelete = await this.musics.where(m => m.state != KeepState.unspecified).getAll();
+    final toDelete = await musics.where().stateNotEqualTo(KeepState.unspecified).findAll();
 
     final futures = <Future<void>>[];
-    await for (var m in toDelete) {
-      final file = new File(root, m.path);
+    for (var m in toDelete) {
+      final file = File(p.join(root.path, m.path));
       futures.add(file.delete());
     }
     await Future.wait(futures);
-    await this.musics.deleteAll(toDelete);
+    await musics.deleteAll(toDelete.map((m) => m.id).toList());
 
-    final directoriesToCheck = new HashSet<String>();
-    directoriesToCheck.addAll(toDelete.map(m => m.parentPath));
+    final directoriesToCheck = <String>{};
+    directoriesToCheck.addAll(toDelete.map((m) => m.parentPath));
 
-    while (directoriesToCheck.length > 0) {
-      final d = new Directory(directoriesToCheck.pop());
-      if (d.isEmpty()) {
+    while (directoriesToCheck.isNotEmpty) {
+      final path = directoriesToCheck.last;
+      directoriesToCheck.remove(path);
+      final d = Directory(p.join(root.path, path));
+      if (!(await d.exists()) || await d.list(recursive: false, followLinks: false).isEmpty) {
         await d.delete();
-        directoriesToCheck.add(d.parent);
+        directoriesToCheck.add(d.parent.path);
       }
     }
   }
 
   Future<MusicFolderDto> getAll(KeepState? state) async {
-    var query = this.musics.asQuery();
+    // must be dynamic b/c of optional stateEqualTo call
+    dynamic query = musics.where();
     if (state != null) {
-      query = query.where(m => m.state == state);
+      query = query.stateEqualTo(state);
     }
-    query = query.orderBy(m => m.path);
 
-    final musics = await query.getAll();
-    return _buildMusicHierarchy(musics, root);
+    final allPersisted = await query.sortByPath().findAll();
+    return _buildMusicHierarchy(allPersisted);
   }
 
   /// Persist the music changes to the DB
   Future<void> save(Music music) async {
-    await this.musics.update(toAdd);
+    await musics.put(music);
   }
 
   /// Scans the given folder and populates the DB with the scanned musics
@@ -65,20 +70,22 @@ class MusicStoreService {
     await _scan(scanned, '', root);
     debugPrint("[$tag]: Scanned ${scanned.length} musics.");
 
-    final existing = (await this.musics.getAll()).toDictionary(m => m.path);
-    final toAdd = <Music>[];
-    for (var m in scanned) {
-      if (!existing.contains(m.path)) {
-        toAdd.add(m);
-      }
-    }
+    var added = 0;
+    await db.writeTxn(() async {
+      final existing = { for (var m in await musics.where().findAll()) m.path };
 
-    debugPrint("[$tag]: Adding ${toAdd.length} musics to DB (not yet tracked).");
-    await this.musics.insertAll(toAdd);
+      for (var m in scanned) {
+        if (!existing.contains(m.path)) {
+          await musics.put(m);
+          added += 1;
+        }
+      }
+    });
+    debugPrint("[$tag]: Added $added musics to DB (not yet tracked).");
   }
 
   MusicFolderDto _buildMusicHierarchy(List<Music> musics) {
-    final root = new MusicFolderDto(path: '');
+    final root = MusicFolderDto(path: '');
     for (var m in musics) {
       final parent = _lookupOrCreate(root, '', m.parentPath.split('/'), 0);
       parent.musics.add(m);
@@ -94,7 +101,7 @@ class MusicStoreService {
     final key = splits[depth];
     prefix = p.join(prefix, key);
     final child = parent.children.putIfAbsent(key, () => MusicFolderDto(path: prefix, parent: parent));
-    return _lookupSplits(child, prefix, splits, depth + 1);
+    return _lookupOrCreate(child, prefix, splits, depth + 1);
   }
 
   Future<void> _scan(
@@ -130,7 +137,7 @@ class MusicStoreService {
       return Music(
         path: path,
         title: metadata.trackName,
-        artists: metadata.trackArtistNames ?? [],
+        artists: (metadata.trackArtistNames?.map((e) => e.toString()) ?? []).join('; '),
         album: metadata.albumName,
         albumArtist: metadata.albumArtistName,
       );

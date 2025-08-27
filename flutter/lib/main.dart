@@ -1,9 +1,13 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:pref/pref.dart';
 import 'package:provider/provider.dart';
+import 'package:isar/isar.dart';
+
+import 'data/entities/music.dart';
 
 import 'models/catalog.dart';
 import 'models/catalog_volatile.dart';
@@ -48,10 +52,10 @@ Future<void> main() async {
   final isarDir = Directory('${docDir.path}/isar_db');
   await isarDir.create(recursive: true);
 
-  // final isar = await Isar.open(
-  //   [],
-  //   directory: isarDir.path,
-  // );
+  final isar = await Isar.open(
+    [MusicSchema],
+    directory: isarDir.path,
+  );
   final Catalog catalog =
       VolatileCatalog(rootFolder); //IsarCatalog(isarDb: isar);
   final StateStore stateStore =

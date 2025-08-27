@@ -47,8 +47,10 @@ dependencies:
   just_audio: ^0.9.30                     # Audio player
   just_audio_platform_interface: ^4.2.0
   rxdart: ^0.27.0
-  fluttertoast: ^8.2.0
+  fluttertoast: ^8.2.14
   text_scroll: ^0.2.0                     # auto-scrolling text
+# dependency_overrides:
+#   fluttertoast: '8.2.14'
 
 dev_dependencies:
   flutter_test:
