@@ -1,6 +1,9 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
+import 'package:music_filter/services/music_store_service.dart';
+import 'package:music_filter/services/playlist_service.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:pref/pref.dart';
@@ -9,10 +12,6 @@ import 'package:isar/isar.dart';
 
 import 'data/entities/music.dart';
 
-import 'models/catalog.dart';
-import 'models/catalog_volatile.dart';
-import 'models/state_store.dart';
-import 'models/state_store_volatile.dart';
 import 'notification.dart';
 import 'pages/home.dart';
 import 'providers/active_tabs.dart';
@@ -46,24 +45,21 @@ Future<void> main() async {
     prefService: prefService,
     prefName: Pref.rootFolder.name,
   );
-  final PlayerQueueNotifier playlist = JustAudioQueueNotifier(rootFolder);
 
   final docDir = await getApplicationDocumentsDirectory();
-  final isarDir = Directory('${docDir.path}/isar_db');
+  final isarDir = Directory(p.join(docDir.path, 'isar_db'));
   await isarDir.create(recursive: true);
-
   final isar = await Isar.open(
     [MusicSchema],
     directory: isarDir.path,
   );
-  final Catalog catalog =
-      VolatileCatalog(rootFolder); //IsarCatalog(isarDb: isar);
-  final StateStore stateStore =
-      VolatileStateStore(rootFolder); // IsarStateStore(isarDb: isar);
+
+  final playlist = PlaylistService();
+  final musicStore = MusicStoreService(isar);
 
   await NotifHandler.init(
     queue: playlist,
-    stateStore: stateStore,
+    musicStore: musicStore,
   );
 
   final PlayerStateController player = JustAudioPlayerController();
@@ -79,10 +75,9 @@ Future<void> main() async {
           create: (_) => ShowEmptyFoldersNotifier(prefService: prefService)),
       ChangeNotifierProvider.value(value: permissions),
       ChangeNotifierProvider.value(value: rootFolder),
-      ChangeNotifierProvider.value(value: playlist),
+      Provider.value(value: playlist),
       Provider.value(value: player),
-      ChangeNotifierProvider.value(value: catalog),
-      ChangeNotifierProvider.value(value: stateStore),
+      Provider.value(value: musicStore),
     ],
     child: PrefService(
       service: prefService,
@@ -93,7 +88,7 @@ Future<void> main() async {
 
 class MyApp extends StatelessWidget {
   static const String title = "MusicFilter";
-  static const String version = "1.0.0";
+  static const String version = "1.1.0";
 
   const MyApp({super.key});
 
@@ -126,15 +121,19 @@ class MyApp extends StatelessWidget {
                 .getStatuses(required)
                 .every((e) => e == PermissionStatus.granted)
             ? _homePage(context)
-            : Scaffold(
-                body: Center(
-                  child: ElevatedButton(
-                    child: Text("Request permissions"),
-                    onPressed: () => perm.requestOrGoToSettings(required),
-                  ),
-                ),
-              ));
+            : _requestPermissions(context, perm, required));
   }
+
+  Widget _requestPermissions(BuildContext context, PermissionsNotifier perm,
+          List<PermissionGroup> required) =>
+      Scaffold(
+        body: Center(
+          child: ElevatedButton(
+            child: Text("Request permissions"),
+            onPressed: () => perm.requestOrGoToSettings(required),
+          ),
+        ),
+      );
 
   Widget _homePage(BuildContext context) => HomePage();
 

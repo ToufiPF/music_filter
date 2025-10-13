@@ -7,9 +7,10 @@ import 'package:flutter/services.dart';
 import 'package:just_audio_platform_interface/just_audio_platform_interface.dart';
 import 'package:rxdart/rxdart.dart';
 
-import 'models/music.dart';
-import 'models/state_store.dart';
-import 'providers/playlist.dart';
+import 'data/entities/music.dart';
+import 'data/enums/state.dart';
+import 'services/music_store_service.dart';
+import 'services/playlist_service.dart';
 
 export 'package:audio_service/audio_service.dart' show MediaItem;
 
@@ -19,13 +20,13 @@ late JustAudioPlatform _platform;
 /// Provides the [init] method to initialise just_audio for background playback.
 class NotifHandler {
   static Future<void> init({
-    required StateStore stateStore,
-    required PlayerQueueNotifier queue,
+    required MusicStoreService musicStore,
+    required PlaylistService queue,
   }) async {
     WidgetsFlutterBinding.ensureInitialized();
 
     _platform = JustAudioPlatform.instance;
-    JustAudioPlatform.instance = _JustAudioBackgroundPlugin(stateStore, queue);
+    JustAudioPlatform.instance = _JustAudioBackgroundPlugin(musicStore, queue);
     _audioHandler = await AudioService.init(
       builder: () => SwitchAudioHandler(BaseAudioHandler()),
       config: AudioServiceConfig(
@@ -43,8 +44,8 @@ class NotifHandler {
 }
 
 class _JustAudioBackgroundPlugin extends JustAudioPlatform {
-  final StateStore stateStore;
-  final PlayerQueueNotifier queue;
+  final MusicStoreService stateStore;
+  final PlaylistService queue;
 
   _JustAudioPlayer? _player;
 
@@ -87,8 +88,8 @@ class _JustAudioBackgroundPlugin extends JustAudioPlatform {
 
 class _JustAudioPlayer extends AudioPlayerPlatform {
   final InitRequest initRequest;
-  final StateStore stateStore;
-  final PlayerQueueNotifier playlistQueue;
+  final MusicStoreService stateStore;
+  final PlaylistService playlistQueue;
 
   final eventController = StreamController<PlaybackEventMessage>.broadcast();
   final playerDataController = StreamController<PlayerDataMessage>.broadcast();
@@ -251,8 +252,8 @@ class _PlayerAudioHandler extends BaseAudioHandler
     with QueueHandler, SeekHandler {
   static const tag = "PlayerAudioHandler";
 
-  final StateStore _stateStore;
-  final PlayerQueueNotifier _queue;
+  final MusicStoreService _stateStore;
+  final PlaylistService _queue;
 
   final BehaviorSubject<KeepState> _currentMusicState =
       BehaviorSubject.seeded(KeepState.unspecified);
@@ -284,14 +285,12 @@ class _PlayerAudioHandler extends BaseAudioHandler
 
   int? get index => _justAudioEvent.currentIndex;
 
-  Music? get currentMusic =>
-      index != null ? _queue.queue.elementAtOrNull(index!) : null;
+  Music? get currentMusic => index != null && index! >= 0
+      ? _queue.currentPlaylist().elementAtOrNull(index!)
+      : null;
 
-  MediaItem? get currentMediaItem => index != null &&
-          currentQueue != null &&
-          index! >= 0 &&
-          index! < currentQueue!.length
-      ? currentQueue![index!]
+  MediaItem? get currentMediaItem => index != null && index! >= 0
+      ? currentQueue?.elementAtOrNull(index!)
       : null;
 
   List<MediaItem>? get currentQueue => queue.nvalue;
@@ -568,7 +567,8 @@ class _PlayerAudioHandler extends BaseAudioHandler
     final music = currentMusic;
     if (music != null) {
       final nextState = _currentMusicState.value.nextToggleState;
-      _stateStore.markAs(music, nextState);
+      music.state = nextState;
+      await _stateStore.save(music);
       _broadcastState();
     }
   }
@@ -609,10 +609,8 @@ class _PlayerAudioHandler extends BaseAudioHandler
     _updatePosition();
     _playing = false;
     _broadcastState();
-    // TODO: We should really stop listening to events here to mimic
-    // just_audio's behaviour. E.g. if stop() was called, we actually want to
-    // keep the state around even though the platform may be disposing its own
-    // state.
+    // TODO: We should really stop listening to events here to mimic just_audio's behaviour.
+    // E.g. if stop() was called, we actually want to keep the state around even though the platform may be disposing its own state.
     _platform.disposePlayer(DisposePlayerRequest(id: (await _player).id));
     _justAudioEvent = _justAudioEvent.copyWith(
       processingState: ProcessingStateMessage.idle,

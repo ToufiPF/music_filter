@@ -8,6 +8,7 @@ import 'package:path/path.dart' as p;
 import '../data/entities/music.dart';
 import '../data/enums/state.dart';
 import '../data/models/music_folder.dart';
+import '../util/misc.dart';
 
 class MusicStoreService {
   static const String tag = "MusicStoreService";
@@ -20,6 +21,25 @@ class MusicStoreService {
   /// Empties out the entire Music table
   Future<void> clear() async {
     await musics.where().deleteAll();
+  }
+
+  Future<void> exportTreatedMusicStates(File file) async {
+    IOSink? sink;
+    try {
+      await file.parent.create(recursive: true);
+      sink = file.openWrite(mode: FileMode.writeOnlyAppend);
+
+      final toExport = await musics.where().stateNotEqualTo(KeepState.unspecified).findAll();
+      for (var m in toExport) {
+        sink.writeln("\"${m.path.escapeDoubleQuotes()}\", ${m.state}");
+      }
+
+      await sink.flush();
+    } catch(e) {
+      debugPrint("[$tag] Caught exception when exporting music states to ${file.path}");
+    } finally {
+      sink?.close();
+    }
   }
 
   Future<void> deleteTreatedMusicsFromFileStorage(Directory root) async {
@@ -55,12 +75,17 @@ class MusicStoreService {
     }
 
     final allPersisted = await query.sortByPath().findAll();
-    return _buildMusicHierarchy(allPersisted);
+    return MusicFolderDto.buildMusicHierarchy(allPersisted);
   }
 
   /// Persist the music changes to the DB
   Future<void> save(Music music) async {
     await musics.put(music);
+  }
+
+  Stream<KeepState> watchState(Music music) {
+    return musics.watchObjectLazy(music.id, fireImmediately: true).map((_) => music.state).distinct();
+    // return musics.watchObject(music.id, fireImmediately: true).map((m) => m?.state ?? KeepState.unspecified);
   }
 
   /// Scans the given folder and populates the DB with the scanned musics
@@ -82,26 +107,6 @@ class MusicStoreService {
       }
     });
     debugPrint("[$tag]: Added $added musics to DB (not yet tracked).");
-  }
-
-  MusicFolderDto _buildMusicHierarchy(List<Music> musics) {
-    final root = MusicFolderDto(path: '');
-    for (var m in musics) {
-      final parent = _lookupOrCreate(root, '', m.parentPath.split('/'), 0);
-      parent.musics.add(m);
-    }
-    return root;
-  }
-
-  MusicFolderDto _lookupOrCreate(MusicFolderDto parent, String prefix, List<String> splits, int depth) {
-    if (depth >= splits.length) {
-      return parent;
-    }
-
-    final key = splits[depth];
-    prefix = p.join(prefix, key);
-    final child = parent.children.putIfAbsent(key, () => MusicFolderDto(path: prefix, parent: parent));
-    return _lookupOrCreate(child, prefix, splits, depth + 1);
   }
 
   Future<void> _scan(

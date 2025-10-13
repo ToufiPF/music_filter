@@ -5,6 +5,26 @@ import 'package:path/path.dart' as p;
 import '../entities/music.dart';
 
 class MusicFolderDto {
+  static MusicFolderDto buildMusicHierarchy(List<Music> musics) {
+    final root = MusicFolderDto(path: '');
+    for (var m in musics) {
+      final parent = lookupOrCreate(root, '', m.parentPath.split('/'), 0);
+      parent.musics.add(m);
+    }
+    return root;
+  }
+
+  static MusicFolderDto lookupOrCreate(MusicFolderDto parent, String prefix, List<String> splits, int depth) {
+    if (depth >= splits.length) {
+      return parent;
+    }
+
+    final key = splits[depth];
+    prefix = p.join(prefix, key);
+    final child = parent.children.putIfAbsent(key, () => MusicFolderDto(path: prefix, parent: parent));
+    return lookupOrCreate(child, prefix, splits, depth + 1);
+  }
+
   MusicFolderDto({
     required this.path,
     this.parent
