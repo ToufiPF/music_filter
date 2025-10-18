@@ -1,11 +1,10 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:pref/pref.dart';
 import 'package:provider/provider.dart';
 
-import '../models/catalog.dart';
-import '../models/state_store.dart';
 import '../providers/root_folder.dart';
 import 'active_tabs.dart';
 
@@ -77,14 +76,16 @@ class SettingsPage extends StatelessWidget {
           PrefButton(
             child: Text("Restore musics in recycle bin"),
             onTap: () async {
-              final catalog = Provider.of<Catalog>(context, listen: false);
-              final store = Provider.of<StateStore>(context, listen: false);
-              final musics = catalog.recycleBin?.allDescendants ?? [];
+              Fluttertoast.cancel().then((_) => Fluttertoast.showToast(
+                  msg: "Recycle bin not yet implemented"));
+              // final catalog = Provider.of<Catalog>(context, listen: false);
+              // final store = Provider.of<MusicStoreService>(context, listen: false);
+              // final musics = catalog.recycleBin?.allDescendants ?? [];
 
-              await Future.forEach(
-                  musics, (e) => store.markAs(e, KeepState.unspecified));
-              await store.exportState(musics);
-              await catalog.restore(musics);
+              // await Future.forEach(
+              //     musics, (e) => store.markAs(e, KeepState.unspecified));
+              // await store.exportState(musics);
+              // await catalog.restore(musics);
             },
           ),
           PrefButton(

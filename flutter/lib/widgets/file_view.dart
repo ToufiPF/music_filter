@@ -1,23 +1,23 @@
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
+import 'package:music_filter/services/music_store_service.dart';
+import 'package:music_filter/services/playlist_service.dart';
 import 'package:provider/provider.dart';
 
-import '../models/music.dart';
-import '../models/music_folder.dart';
-import '../models/state_store.dart';
+import '../data/entities/music.dart';
+import '../data/models/music_folder.dart';
 import '../providers/folders.dart';
-import '../providers/playlist.dart';
 import '../util/constants.dart';
 import 'context_menu.dart';
 
 class CurrentFolderNotifier extends ChangeNotifier {
   CurrentFolderNotifier(this.current);
 
-  MusicFolder current;
+  MusicFolderDto current;
 
   bool get canGoUp => current.parent != null;
 
-  void goTo(MusicFolder folder) {
+  void goTo(MusicFolderDto folder) {
     current = folder;
     notifyListeners();
   }
@@ -33,19 +33,17 @@ class FileView extends StatelessWidget {
 
   const FileView({super.key, required this.root});
 
-  final MusicFolder root;
+  final MusicFolderDto root;
 
   @override
   Widget build(BuildContext context) => ChangeNotifierProvider(
       create: (context) => CurrentFolderNotifier(root),
       child: Consumer<CurrentFolderNotifier>(
-        builder: (context, current, child) => WillPopScope(
-            onWillPop: () async {
-              if (current.canGoUp) {
+        builder: (context, current, child) => PopScope(
+            canPop: current.canGoUp,
+            onPopInvoked: (didPop) {
+              if (didPop) {
                 current.goUp();
-                return false;
-              } else {
-                return true;
               }
             },
             child: Column(
@@ -75,9 +73,9 @@ class FileView extends StatelessWidget {
             )),
       ));
 
-  (List<MusicFolder>, List<Music>) _getEntriesToShow(MusicFolder current,
+  (List<MusicFolderDto>, List<Music>) _getEntriesToShow(MusicFolderDto current,
       {required bool showHidden, required bool showEmpty}) {
-    final folders = current.children
+    final folders = current.children.values
         .where((e) => showHidden || !e.folderName.startsWith('.'))
         .where((e) => showEmpty || e.allDescendants.isNotEmpty)
         .sortedBy((e) => e.path);
@@ -89,12 +87,11 @@ class FileView extends StatelessWidget {
 
   Widget _listView(
     BuildContext context,
-    List<MusicFolder> folders,
+    List<MusicFolderDto> folders,
     List<Music> musics,
   ) {
     final current = Provider.of<CurrentFolderNotifier>(context, listen: false);
-    final store = Provider.of<StateStore>(context, listen: false);
-    final playlist = Provider.of<PlayerQueueNotifier>(context, listen: false);
+    final playlist = Provider.of<PlaylistService>(context, listen: false);
 
     return ListView.builder(
         physics: NeverScrollableScrollPhysics(),
@@ -105,12 +102,7 @@ class FileView extends StatelessWidget {
             final folder = folders[index];
             return ListTile(
               title: Constants.scrollingText(folder.folderName),
-              leading: Selector<StateStore, bool>(
-                selector: (context, store) => store.isTrackedFolder(folder),
-                builder: (context, isTracked, child) => isTracked
-                    ? Icon(Icons.folder_open_outlined)
-                    : Icon(Icons.folder_outlined),
-              ),
+              leading: Icon(Icons.folder_open_outlined),
               trailing: _trailingFolderWidget(context, folder),
               onTap: () => current.goTo(folder),
             );
@@ -121,7 +113,6 @@ class FileView extends StatelessWidget {
               title: Constants.scrollingText(music.filename),
               onTap: () async {
                 await playlist.appendAll([music]);
-                await store.startTracking([music]);
               },
               trailing: _trailingFileWidget(context, music),
             );
@@ -129,17 +120,17 @@ class FileView extends StatelessWidget {
         });
   }
 
-  Widget _trailingFolderWidget(BuildContext context, MusicFolder dir) => Row(
+  Widget _trailingFolderWidget(BuildContext context, MusicFolderDto dir) => Row(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            IconActions.trackOrExportFolder(context, dir),
+            IconActions.addFolderToPlaylist(context, dir),
           ]);
 
   Widget _trailingFileWidget(BuildContext context, Music music) => Row(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            IconActions.trackOrExportMusic(context, music),
+            IconActions.addMusicToPlaylist(context, music),
           ]);
 }

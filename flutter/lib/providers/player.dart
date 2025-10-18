@@ -1,7 +1,5 @@
 import 'package:just_audio/just_audio.dart';
-import 'package:music_filter/services/playlist_service.dart';
-
-import 'playlist.dart';
+import '../services/playlist_service.dart';
 
 mixin PlayerController {
   /// Attaches a [PlayerQueueNotifier] to this [PlayerController]

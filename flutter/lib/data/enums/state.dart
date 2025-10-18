@@ -21,3 +21,8 @@ enum KeepState {
         KeepState.unspecified => "unspecified",
       };
 }
+
+extension NextState on KeepState {
+  KeepState get nextToggleState =>
+      KeepState.values[(index + 1) % KeepState.values.length];
+}

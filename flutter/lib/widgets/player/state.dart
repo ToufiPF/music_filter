@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
+import 'package:rxdart/rxdart.dart';
 
-import '../../models/music.dart';
-import '../../models/state_store.dart';
+import '../../data/entities/music.dart';
+import '../../data/enums/state.dart';
 import '../../providers/player.dart';
-import '../../providers/playlist.dart';
+import '../../services/music_store_service.dart';
+import '../../services/playlist_service.dart';
+import '_helper.dart';
 
 class KeepStateWidget extends StatelessWidget {
   const KeepStateWidget({
@@ -19,36 +22,26 @@ class KeepStateWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final store = Provider.of<StateStore>(context, listen: false);
+    final store = Provider.of<MusicStoreService>(context, listen: false);
 
     return StreamBuilder<KeepState>(
         initialData: KeepState.unspecified,
         stream: music != null ? store.watchState(music!) : null,
         builder: (context, snapshot) {
-          final nextState = snapshot.data!.nextToggleState;
+          final nextState = snapshot.requireData.nextToggleState;
           return IconButton(
             onPressed: music != null
-                ? () {
+                ? () async {
                     Fluttertoast.cancel().then((_) =>
                         Fluttertoast.showToast(msg: "Marked as $nextState"));
-                    store.markAs(music!, nextState);
+                    music!.state = nextState;
+                    await store.save(music!);
                   }
                 : null,
-            icon: Icon(
-                switch (nextState) {
-                  KeepState.unspecified => Icons.restore,
-                  KeepState.kept => Icons.save,
-                  KeepState.deleted => Icons.delete_forever,
-                },
-                size: iconSize),
+            icon: Icon(nextState.icon, size: iconSize),
           );
         });
   }
-}
-
-extension NextState on KeepState {
-  KeepState get nextToggleState =>
-      KeepState.values[(index + 1) % KeepState.values.length];
 }
 
 class CurrentlyPlayingKeepStateWidget extends StatelessWidget {
@@ -57,19 +50,10 @@ class CurrentlyPlayingKeepStateWidget extends StatelessWidget {
   final double iconSize;
 
   @override
-  Widget build(BuildContext context) {
-    final player = Provider.of<PlayerStateController>(context, listen: false);
-    return Consumer<PlayerQueueNotifier>(
-        builder: (context, queue, child) => StreamBuilder<int?>(
-            initialData: null,
-            stream: player.indexInPlaylistStream,
-            builder: (context, snapshot) {
-              final idx = snapshot.data;
-              Music? music = idx != null && idx < queue.queue.length
-                  ? queue.queue[idx]
-                  : null;
-
-              return KeepStateWidget(music: music, iconSize: iconSize);
-            }));
-  }
+  Widget build(BuildContext context) =>
+      PlayerHelper.playlistWithIndexStreamBuilder(context,
+          (context, musics, idx) {
+        Music? music = idx != null && idx < musics.length ? musics[idx] : null;
+        return KeepStateWidget(music: music, iconSize: iconSize);
+      });
 }

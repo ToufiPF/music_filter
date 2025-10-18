@@ -854,8 +854,3 @@ extension _ValueStreamExtension<T> on ValueStream<T> {
   /// Backwards compatible version of valueOrNull.
   T? get nvalue => hasValue ? value : null;
 }
-
-extension _NextState on KeepState {
-  KeepState get nextToggleState =>
-      KeepState.values[(index + 1) % KeepState.values.length];
-}

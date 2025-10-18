@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:music_filter/services/music_store_service.dart';
 import 'package:music_filter/services/playlist_service.dart';
 import 'package:path/path.dart' as p;
@@ -18,7 +17,6 @@ import 'providers/active_tabs.dart';
 import 'providers/folders.dart';
 import 'providers/permissions.dart';
 import 'providers/player.dart';
-import 'providers/playlist.dart';
 import 'providers/root_folder.dart';
 import 'settings/settings.dart';
 
