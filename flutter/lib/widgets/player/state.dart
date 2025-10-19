@@ -1,13 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
-import 'package:rxdart/rxdart.dart';
 
 import '../../data/entities/music.dart';
 import '../../data/enums/state.dart';
-import '../../providers/player.dart';
 import '../../services/music_store_service.dart';
-import '../../services/playlist_service.dart';
 import '_helper.dart';
 
 class KeepStateWidget extends StatelessWidget {

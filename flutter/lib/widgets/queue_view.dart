@@ -4,15 +4,13 @@ import 'package:provider/provider.dart';
 import 'package:path/path.dart' as p;
 
 import '../data/entities/music.dart';
-import '../data/enums/state.dart';
 import '../services/playlist_service.dart';
 import '../providers/player.dart';
 import '../util/constants.dart';
-import '../widgets/context_menu.dart';
 import '../widgets/player/state.dart';
 
 class QueueView extends StatelessWidget {
-  static const double iconSize = 32;
+  static const double iconSize = 28;
   static const prototype = ListTile(
       title: Text("Filename"),
       subtitle: Column(
@@ -31,7 +29,6 @@ class QueueView extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           KeepStateWidget(music: null, iconSize: iconSize),
-          Icon(Icons.check, size: iconSize),
         ],
       ));
 
@@ -39,7 +36,6 @@ class QueueView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final store = Provider.of<MusicStoreService>(context, listen: false);
     final playlist = Provider.of<PlaylistService>(context, listen: false);
     final player = Provider.of<PlayerStateController>(context, listen: false);
 
@@ -68,7 +64,6 @@ class QueueView extends StatelessWidget {
                     builder: (context, snapshot2) => _buildTile(
                           context,
                           player,
-                          store,
                           musics,
                           musicIdx,
                           snapshot2.requireData,
@@ -80,7 +75,6 @@ class QueueView extends StatelessWidget {
   Widget _buildTile(
     BuildContext context,
     PlayerStateController player,
-    MusicStoreService store,
     List<Music> playlistQueue,
     int musicIdx,
     bool isSongPlaying,
@@ -95,7 +89,7 @@ class QueueView extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Constants.scrollingText(music.artists ?? ''),
-          Constants.scrollingText(p.basename(music.path),
+          Constants.scrollingText(p.basename(music.virtualPath),
               style: TextStyle(fontStyle: FontStyle.italic)),
         ],
       ),
@@ -107,14 +101,6 @@ class QueueView extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           KeepStateWidget(music: music, iconSize: iconSize),
-          StreamBuilder<KeepState>(
-              initialData: KeepState.unspecified,
-              stream: store.watchState(music),
-              builder: (context, snapshot) => IconActions.musicAction(
-                  snapshot.requireData.nextToggleState,
-                  context,
-                  music,
-                  snapshot.requireData)),
         ],
       ),
       onTap: () {

@@ -5,6 +5,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_media_metadata/flutter_media_metadata.dart';
 import 'package:isar/isar.dart';
 import 'package:path/path.dart' as p;
+import 'package:rxdart/rxdart.dart';
 
 import '../data/entities/music.dart';
 import '../data/enums/state.dart';
@@ -16,11 +17,13 @@ class MusicStoreService {
 
   final Isar db;
   final IsarCollection<Music> musics;
-  final _stream = StreamController<MusicFolderDto?>.broadcast();
+  final _stream = BehaviorSubject<MusicFolderDto?>();
 
   Stream<MusicFolderDto?> get catalog => _stream.stream;
 
-  MusicStoreService(this.db) : musics = db.musics;
+  MusicStoreService(this.db) : musics = db.musics {
+    _refreshStream();
+  }
 
   /// Empties out the entire Music table
   Future<void> clear() async {
@@ -37,7 +40,7 @@ class MusicStoreService {
       final toExport =
           await musics.where().stateNotEqualTo(KeepState.unspecified).findAll();
       for (var m in toExport) {
-        sink.writeln("\"${m.path.escapeDoubleQuotes()}\", ${m.state}");
+        sink.writeln("\"${m.virtualPath.escapeDoubleQuotes()}\", ${m.state}");
       }
 
       await sink.flush();
@@ -55,11 +58,14 @@ class MusicStoreService {
 
     final futures = <Future<void>>[];
     for (var m in toDelete) {
-      final file = File(p.join(root.path, m.path));
+      final file = File(m.physicalPath);
       futures.add(file.delete());
     }
     await Future.wait(futures);
-    await musics.deleteAll(toDelete.map((m) => m.id).toList());
+
+    await db.writeTxn(() async {
+      await musics.deleteAll(toDelete.map((m) => m.id).toList());
+    });
 
     final directoriesToCheck = <String>{};
     directoriesToCheck.addAll(toDelete.map((m) => m.parentPath));
@@ -79,19 +85,25 @@ class MusicStoreService {
   }
 
   Future<MusicFolderDto> getAll(KeepState? state) async {
+    final allPersisted = await _getAll(state);
+    return MusicFolderDto.buildMusicHierarchy(allPersisted);
+  }
+
+  Future<List<Music>> _getAll(KeepState? state) async {
     // must be dynamic b/c of optional stateEqualTo call
     dynamic query = musics.where();
     if (state != null) {
       query = query.stateEqualTo(state);
     }
     final q = query as QueryBuilder<Music, Music, QSortBy>;
-    final allPersisted = await q.sortByPath().findAll();
-    return MusicFolderDto.buildMusicHierarchy(allPersisted);
+    return await q.sortByPhysicalPath().findAll();
   }
 
   /// Persist the music changes to the DB
   Future<void> save(Music music) async {
-    await musics.put(music);
+    await db.writeTxn(() async {
+      await musics.put(music);
+    });
   }
 
   Stream<KeepState> watchState(Music music) {
@@ -111,10 +123,12 @@ class MusicStoreService {
 
     var added = 0;
     await db.writeTxn(() async {
-      final existing = {for (var m in await musics.where().findAll()) m.path};
+      final existing = {
+        for (var m in await musics.where().findAll()) m.physicalPath
+      };
 
       for (var m in scanned) {
-        if (!existing.contains(m.path)) {
+        if (existing.add(m.physicalPath)) {
           await musics.put(m);
           added += 1;
         }
@@ -159,9 +173,10 @@ class MusicStoreService {
   Future<Music?> _fetchTags(File file, String path) async {
     try {
       final metadata =
-          await MetadataRetriever.fromFile(file).timeout(Duration(seconds: 5));
+          await MetadataRetriever.fromFile(file).timeout(Duration(seconds: 50));
       return Music(
-        path: path,
+        physicalPath: file.path,
+        virtualPath: path,
         title: metadata.trackName,
         artists: (metadata.trackArtistNames?.map((e) => e.toString()) ?? [])
             .join('; '),
@@ -169,7 +184,7 @@ class MusicStoreService {
         albumArtist: metadata.albumArtistName,
       );
     } catch (e) {
-      debugPrint("[$tag]_fetchTag($path) caught error: $e");
+      debugPrint("[$tag]_fetchTag(${file.path}) caught error: $e");
       return null;
     }
   }

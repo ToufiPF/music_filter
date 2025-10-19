@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:just_audio/just_audio.dart';
+import 'package:rxdart/rxdart.dart';
 
 import '../data/entities/music.dart';
 import '../data/enums/state.dart';
@@ -16,12 +17,11 @@ class PlaylistService {
   // MusicFolderDto? tracked;
   // final trackedController = StreamController<MusicFolderDto?>();
   List<Music> _tracked = [];
-  final _trackedController = StreamController<List<Music>>();
+  final _trackedController = BehaviorSubject<List<Music>>();
 
   AudioSource get audioSource => _source;
 
   Future<void> clear() async {
-    // tracked = MusicFolderDto(path: root.path);
     _tracked = [];
     await _source.clear();
     _refreshController();
@@ -107,7 +107,7 @@ class PlaylistService {
   AudioSource _musicToSource(Music music) {
     final id = _idxCounter.toString();
     _idxCounter += 1;
-    return AudioSource.file(music.path,
+    return AudioSource.file(music.physicalPath,
         tag: MediaItem(
           id: id,
           title: music.title ?? music.filename,

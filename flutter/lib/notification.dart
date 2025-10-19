@@ -25,6 +25,14 @@ class NotifHandler {
   }) async {
     WidgetsFlutterBinding.ensureInitialized();
 
+    // await JustAudioBackground.init(
+    //   androidNotificationChannelId: 'ch.epfl.music_filter',
+    //   androidNotificationChannelName: 'Audio playback',
+    //   androidNotificationClickStartsActivity: true,
+    //   androidNotificationOngoing: false,
+    //   androidStopForegroundOnPause: true,
+    // );
+
     _platform = JustAudioPlatform.instance;
     JustAudioPlatform.instance = _JustAudioBackgroundPlugin(musicStore, queue);
     _audioHandler = await AudioService.init(

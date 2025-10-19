@@ -3,12 +3,15 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/widgets.dart';
 
+import '../services/music_store_service.dart';
 import '_base.dart';
 
 class RootFolderNotifier extends NullablePrefNotifier<String> {
   static const String tag = "RootFolderNotifier";
 
-  RootFolderNotifier({required super.prefService, required super.prefName});
+  final MusicStoreService store;
+
+  RootFolderNotifier({required super.prefService, required super.prefName, required this.store});
 
   /// Returns the path to the configured folder
   Directory? get rootFolder =>
@@ -27,11 +30,14 @@ class RootFolderNotifier extends NullablePrefNotifier<String> {
     }
 
     super.value = picked;
+    await store.clear();
+    await store.scanFolder(Directory(picked));
     return true;
   }
 
-  void resetFolder() {
+  Future<void> resetFolder() async {
     debugPrint("[$tag]_resetFolder: dropping ${super.value}");
     super.value = null;
+    await store.clear();
   }
 }

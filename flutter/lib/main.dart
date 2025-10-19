@@ -22,14 +22,6 @@ import 'settings/settings.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  //
-  // await JustAudioBackground.init(
-  //   androidNotificationChannelId: 'ch.epfl.music_filter',
-  //   androidNotificationChannelName: 'Audio playback',
-  //   androidNotificationClickStartsActivity: true,
-  //   androidNotificationOngoing: false,
-  //   androidStopForegroundOnPause: true,
-  // );
 
   final prefService = await PrefServiceShared.init(
     prefix: "",
@@ -38,11 +30,6 @@ Future<void> main() async {
 
   final permissions = await PermissionsNotifier.initialize();
   WidgetsBinding.instance.addObserver(permissions);
-
-  final rootFolder = RootFolderNotifier(
-    prefService: prefService,
-    prefName: Pref.rootFolder.name,
-  );
 
   final docDir = await getApplicationDocumentsDirectory();
   final isarDir = Directory(p.join(docDir.path, 'isar_db'));
@@ -54,6 +41,12 @@ Future<void> main() async {
 
   final playlist = PlaylistService();
   final musicStore = MusicStoreService(isar);
+
+  final rootFolder = RootFolderNotifier(
+    prefService: prefService,
+    prefName: Pref.rootFolder.name,
+    store: musicStore
+  );
 
   await NotifHandler.init(
     queue: playlist,

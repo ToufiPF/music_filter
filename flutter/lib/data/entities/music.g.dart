@@ -32,9 +32,9 @@ const MusicSchema = CollectionSchema(
       name: r'artists',
       type: IsarType.string,
     ),
-    r'path': PropertySchema(
+    r'physicalPath': PropertySchema(
       id: 3,
-      name: r'path',
+      name: r'physicalPath',
       type: IsarType.string,
     ),
     r'state': PropertySchema(
@@ -47,6 +47,11 @@ const MusicSchema = CollectionSchema(
       id: 5,
       name: r'title',
       type: IsarType.string,
+    ),
+    r'virtualPath': PropertySchema(
+      id: 6,
+      name: r'virtualPath',
+      type: IsarType.string,
     )
   },
   estimateSize: _musicEstimateSize,
@@ -55,14 +60,27 @@ const MusicSchema = CollectionSchema(
   deserializeProp: _musicDeserializeProp,
   idName: r'id',
   indexes: {
-    r'path': IndexSchema(
-      id: 8756705481922369689,
-      name: r'path',
+    r'physicalPath': IndexSchema(
+      id: -1913275958561836485,
+      name: r'physicalPath',
       unique: true,
       replace: false,
       properties: [
         IndexPropertySchema(
-          name: r'path',
+          name: r'physicalPath',
+          type: IndexType.hash,
+          caseSensitive: true,
+        )
+      ],
+    ),
+    r'virtualPath': IndexSchema(
+      id: -3357044703392709690,
+      name: r'virtualPath',
+      unique: true,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'virtualPath',
           type: IndexType.hash,
           caseSensitive: false,
         )
@@ -114,13 +132,14 @@ int _musicEstimateSize(
       bytesCount += 3 + value.length * 3;
     }
   }
-  bytesCount += 3 + object.path.length * 3;
+  bytesCount += 3 + object.physicalPath.length * 3;
   {
     final value = object.title;
     if (value != null) {
       bytesCount += 3 + value.length * 3;
     }
   }
+  bytesCount += 3 + object.virtualPath.length * 3;
   return bytesCount;
 }
 
@@ -133,9 +152,10 @@ void _musicSerialize(
   writer.writeString(offsets[0], object.album);
   writer.writeString(offsets[1], object.albumArtist);
   writer.writeString(offsets[2], object.artists);
-  writer.writeString(offsets[3], object.path);
+  writer.writeString(offsets[3], object.physicalPath);
   writer.writeByte(offsets[4], object.state.index);
   writer.writeString(offsets[5], object.title);
+  writer.writeString(offsets[6], object.virtualPath);
 }
 
 Music _musicDeserialize(
@@ -148,8 +168,9 @@ Music _musicDeserialize(
     album: reader.readStringOrNull(offsets[0]),
     albumArtist: reader.readStringOrNull(offsets[1]),
     artists: reader.readStringOrNull(offsets[2]),
-    path: reader.readString(offsets[3]),
+    physicalPath: reader.readString(offsets[3]),
     title: reader.readStringOrNull(offsets[5]),
+    virtualPath: reader.readString(offsets[6]),
   );
   object.id = id;
   object.state = _MusicstateValueEnumMap[reader.readByteOrNull(offsets[4])] ??
@@ -177,6 +198,8 @@ P _musicDeserializeProp<P>(
           KeepState.unspecified) as P;
     case 5:
       return (reader.readStringOrNull(offset)) as P;
+    case 6:
+      return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
   }
@@ -206,56 +229,110 @@ void _musicAttach(IsarCollection<dynamic> col, Id id, Music object) {
 }
 
 extension MusicByIndex on IsarCollection<Music> {
-  Future<Music?> getByPath(String path) {
-    return getByIndex(r'path', [path]);
+  Future<Music?> getByPhysicalPath(String physicalPath) {
+    return getByIndex(r'physicalPath', [physicalPath]);
   }
 
-  Music? getByPathSync(String path) {
-    return getByIndexSync(r'path', [path]);
+  Music? getByPhysicalPathSync(String physicalPath) {
+    return getByIndexSync(r'physicalPath', [physicalPath]);
   }
 
-  Future<bool> deleteByPath(String path) {
-    return deleteByIndex(r'path', [path]);
+  Future<bool> deleteByPhysicalPath(String physicalPath) {
+    return deleteByIndex(r'physicalPath', [physicalPath]);
   }
 
-  bool deleteByPathSync(String path) {
-    return deleteByIndexSync(r'path', [path]);
+  bool deleteByPhysicalPathSync(String physicalPath) {
+    return deleteByIndexSync(r'physicalPath', [physicalPath]);
   }
 
-  Future<List<Music?>> getAllByPath(List<String> pathValues) {
-    final values = pathValues.map((e) => [e]).toList();
-    return getAllByIndex(r'path', values);
+  Future<List<Music?>> getAllByPhysicalPath(List<String> physicalPathValues) {
+    final values = physicalPathValues.map((e) => [e]).toList();
+    return getAllByIndex(r'physicalPath', values);
   }
 
-  List<Music?> getAllByPathSync(List<String> pathValues) {
-    final values = pathValues.map((e) => [e]).toList();
-    return getAllByIndexSync(r'path', values);
+  List<Music?> getAllByPhysicalPathSync(List<String> physicalPathValues) {
+    final values = physicalPathValues.map((e) => [e]).toList();
+    return getAllByIndexSync(r'physicalPath', values);
   }
 
-  Future<int> deleteAllByPath(List<String> pathValues) {
-    final values = pathValues.map((e) => [e]).toList();
-    return deleteAllByIndex(r'path', values);
+  Future<int> deleteAllByPhysicalPath(List<String> physicalPathValues) {
+    final values = physicalPathValues.map((e) => [e]).toList();
+    return deleteAllByIndex(r'physicalPath', values);
   }
 
-  int deleteAllByPathSync(List<String> pathValues) {
-    final values = pathValues.map((e) => [e]).toList();
-    return deleteAllByIndexSync(r'path', values);
+  int deleteAllByPhysicalPathSync(List<String> physicalPathValues) {
+    final values = physicalPathValues.map((e) => [e]).toList();
+    return deleteAllByIndexSync(r'physicalPath', values);
   }
 
-  Future<Id> putByPath(Music object) {
-    return putByIndex(r'path', object);
+  Future<Id> putByPhysicalPath(Music object) {
+    return putByIndex(r'physicalPath', object);
   }
 
-  Id putByPathSync(Music object, {bool saveLinks = true}) {
-    return putByIndexSync(r'path', object, saveLinks: saveLinks);
+  Id putByPhysicalPathSync(Music object, {bool saveLinks = true}) {
+    return putByIndexSync(r'physicalPath', object, saveLinks: saveLinks);
   }
 
-  Future<List<Id>> putAllByPath(List<Music> objects) {
-    return putAllByIndex(r'path', objects);
+  Future<List<Id>> putAllByPhysicalPath(List<Music> objects) {
+    return putAllByIndex(r'physicalPath', objects);
   }
 
-  List<Id> putAllByPathSync(List<Music> objects, {bool saveLinks = true}) {
-    return putAllByIndexSync(r'path', objects, saveLinks: saveLinks);
+  List<Id> putAllByPhysicalPathSync(List<Music> objects,
+      {bool saveLinks = true}) {
+    return putAllByIndexSync(r'physicalPath', objects, saveLinks: saveLinks);
+  }
+
+  Future<Music?> getByVirtualPath(String virtualPath) {
+    return getByIndex(r'virtualPath', [virtualPath]);
+  }
+
+  Music? getByVirtualPathSync(String virtualPath) {
+    return getByIndexSync(r'virtualPath', [virtualPath]);
+  }
+
+  Future<bool> deleteByVirtualPath(String virtualPath) {
+    return deleteByIndex(r'virtualPath', [virtualPath]);
+  }
+
+  bool deleteByVirtualPathSync(String virtualPath) {
+    return deleteByIndexSync(r'virtualPath', [virtualPath]);
+  }
+
+  Future<List<Music?>> getAllByVirtualPath(List<String> virtualPathValues) {
+    final values = virtualPathValues.map((e) => [e]).toList();
+    return getAllByIndex(r'virtualPath', values);
+  }
+
+  List<Music?> getAllByVirtualPathSync(List<String> virtualPathValues) {
+    final values = virtualPathValues.map((e) => [e]).toList();
+    return getAllByIndexSync(r'virtualPath', values);
+  }
+
+  Future<int> deleteAllByVirtualPath(List<String> virtualPathValues) {
+    final values = virtualPathValues.map((e) => [e]).toList();
+    return deleteAllByIndex(r'virtualPath', values);
+  }
+
+  int deleteAllByVirtualPathSync(List<String> virtualPathValues) {
+    final values = virtualPathValues.map((e) => [e]).toList();
+    return deleteAllByIndexSync(r'virtualPath', values);
+  }
+
+  Future<Id> putByVirtualPath(Music object) {
+    return putByIndex(r'virtualPath', object);
+  }
+
+  Id putByVirtualPathSync(Music object, {bool saveLinks = true}) {
+    return putByIndexSync(r'virtualPath', object, saveLinks: saveLinks);
+  }
+
+  Future<List<Id>> putAllByVirtualPath(List<Music> objects) {
+    return putAllByIndex(r'virtualPath', objects);
+  }
+
+  List<Id> putAllByVirtualPathSync(List<Music> objects,
+      {bool saveLinks = true}) {
+    return putAllByIndexSync(r'virtualPath', objects, saveLinks: saveLinks);
   }
 }
 
@@ -341,43 +418,90 @@ extension MusicQueryWhere on QueryBuilder<Music, Music, QWhereClause> {
     });
   }
 
-  QueryBuilder<Music, Music, QAfterWhereClause> pathEqualTo(String path) {
+  QueryBuilder<Music, Music, QAfterWhereClause> physicalPathEqualTo(
+      String physicalPath) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(IndexWhereClause.equalTo(
-        indexName: r'path',
-        value: [path],
+        indexName: r'physicalPath',
+        value: [physicalPath],
       ));
     });
   }
 
-  QueryBuilder<Music, Music, QAfterWhereClause> pathNotEqualTo(String path) {
+  QueryBuilder<Music, Music, QAfterWhereClause> physicalPathNotEqualTo(
+      String physicalPath) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
             .addWhereClause(IndexWhereClause.between(
-              indexName: r'path',
+              indexName: r'physicalPath',
               lower: [],
-              upper: [path],
+              upper: [physicalPath],
               includeUpper: false,
             ))
             .addWhereClause(IndexWhereClause.between(
-              indexName: r'path',
-              lower: [path],
+              indexName: r'physicalPath',
+              lower: [physicalPath],
               includeLower: false,
               upper: [],
             ));
       } else {
         return query
             .addWhereClause(IndexWhereClause.between(
-              indexName: r'path',
-              lower: [path],
+              indexName: r'physicalPath',
+              lower: [physicalPath],
               includeLower: false,
               upper: [],
             ))
             .addWhereClause(IndexWhereClause.between(
-              indexName: r'path',
+              indexName: r'physicalPath',
               lower: [],
-              upper: [path],
+              upper: [physicalPath],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<Music, Music, QAfterWhereClause> virtualPathEqualTo(
+      String virtualPath) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'virtualPath',
+        value: [virtualPath],
+      ));
+    });
+  }
+
+  QueryBuilder<Music, Music, QAfterWhereClause> virtualPathNotEqualTo(
+      String virtualPath) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'virtualPath',
+              lower: [],
+              upper: [virtualPath],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'virtualPath',
+              lower: [virtualPath],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'virtualPath',
+              lower: [virtualPath],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'virtualPath',
+              lower: [],
+              upper: [virtualPath],
               includeUpper: false,
             ));
       }
@@ -963,20 +1087,20 @@ extension MusicQueryFilter on QueryBuilder<Music, Music, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Music, Music, QAfterFilterCondition> pathEqualTo(
+  QueryBuilder<Music, Music, QAfterFilterCondition> physicalPathEqualTo(
     String value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'path',
+        property: r'physicalPath',
         value: value,
         caseSensitive: caseSensitive,
       ));
     });
   }
 
-  QueryBuilder<Music, Music, QAfterFilterCondition> pathGreaterThan(
+  QueryBuilder<Music, Music, QAfterFilterCondition> physicalPathGreaterThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
@@ -984,14 +1108,14 @@ extension MusicQueryFilter on QueryBuilder<Music, Music, QFilterCondition> {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
         include: include,
-        property: r'path',
+        property: r'physicalPath',
         value: value,
         caseSensitive: caseSensitive,
       ));
     });
   }
 
-  QueryBuilder<Music, Music, QAfterFilterCondition> pathLessThan(
+  QueryBuilder<Music, Music, QAfterFilterCondition> physicalPathLessThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
@@ -999,14 +1123,14 @@ extension MusicQueryFilter on QueryBuilder<Music, Music, QFilterCondition> {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.lessThan(
         include: include,
-        property: r'path',
+        property: r'physicalPath',
         value: value,
         caseSensitive: caseSensitive,
       ));
     });
   }
 
-  QueryBuilder<Music, Music, QAfterFilterCondition> pathBetween(
+  QueryBuilder<Music, Music, QAfterFilterCondition> physicalPathBetween(
     String lower,
     String upper, {
     bool includeLower = true,
@@ -1015,7 +1139,7 @@ extension MusicQueryFilter on QueryBuilder<Music, Music, QFilterCondition> {
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
-        property: r'path',
+        property: r'physicalPath',
         lower: lower,
         includeLower: includeLower,
         upper: upper,
@@ -1025,67 +1149,69 @@ extension MusicQueryFilter on QueryBuilder<Music, Music, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Music, Music, QAfterFilterCondition> pathStartsWith(
+  QueryBuilder<Music, Music, QAfterFilterCondition> physicalPathStartsWith(
     String value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'path',
+        property: r'physicalPath',
         value: value,
         caseSensitive: caseSensitive,
       ));
     });
   }
 
-  QueryBuilder<Music, Music, QAfterFilterCondition> pathEndsWith(
+  QueryBuilder<Music, Music, QAfterFilterCondition> physicalPathEndsWith(
     String value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'path',
+        property: r'physicalPath',
         value: value,
         caseSensitive: caseSensitive,
       ));
     });
   }
 
-  QueryBuilder<Music, Music, QAfterFilterCondition> pathContains(String value,
+  QueryBuilder<Music, Music, QAfterFilterCondition> physicalPathContains(
+      String value,
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.contains(
-        property: r'path',
+        property: r'physicalPath',
         value: value,
         caseSensitive: caseSensitive,
       ));
     });
   }
 
-  QueryBuilder<Music, Music, QAfterFilterCondition> pathMatches(String pattern,
+  QueryBuilder<Music, Music, QAfterFilterCondition> physicalPathMatches(
+      String pattern,
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.matches(
-        property: r'path',
+        property: r'physicalPath',
         wildcard: pattern,
         caseSensitive: caseSensitive,
       ));
     });
   }
 
-  QueryBuilder<Music, Music, QAfterFilterCondition> pathIsEmpty() {
+  QueryBuilder<Music, Music, QAfterFilterCondition> physicalPathIsEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'path',
+        property: r'physicalPath',
         value: '',
       ));
     });
   }
 
-  QueryBuilder<Music, Music, QAfterFilterCondition> pathIsNotEmpty() {
+  QueryBuilder<Music, Music, QAfterFilterCondition> physicalPathIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'path',
+        property: r'physicalPath',
         value: '',
       ));
     });
@@ -1287,6 +1413,136 @@ extension MusicQueryFilter on QueryBuilder<Music, Music, QFilterCondition> {
       ));
     });
   }
+
+  QueryBuilder<Music, Music, QAfterFilterCondition> virtualPathEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'virtualPath',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Music, Music, QAfterFilterCondition> virtualPathGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'virtualPath',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Music, Music, QAfterFilterCondition> virtualPathLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'virtualPath',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Music, Music, QAfterFilterCondition> virtualPathBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'virtualPath',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Music, Music, QAfterFilterCondition> virtualPathStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'virtualPath',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Music, Music, QAfterFilterCondition> virtualPathEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'virtualPath',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Music, Music, QAfterFilterCondition> virtualPathContains(
+      String value,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'virtualPath',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Music, Music, QAfterFilterCondition> virtualPathMatches(
+      String pattern,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'virtualPath',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Music, Music, QAfterFilterCondition> virtualPathIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'virtualPath',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Music, Music, QAfterFilterCondition> virtualPathIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'virtualPath',
+        value: '',
+      ));
+    });
+  }
 }
 
 extension MusicQueryObject on QueryBuilder<Music, Music, QFilterCondition> {}
@@ -1330,15 +1586,15 @@ extension MusicQuerySortBy on QueryBuilder<Music, Music, QSortBy> {
     });
   }
 
-  QueryBuilder<Music, Music, QAfterSortBy> sortByPath() {
+  QueryBuilder<Music, Music, QAfterSortBy> sortByPhysicalPath() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'path', Sort.asc);
+      return query.addSortBy(r'physicalPath', Sort.asc);
     });
   }
 
-  QueryBuilder<Music, Music, QAfterSortBy> sortByPathDesc() {
+  QueryBuilder<Music, Music, QAfterSortBy> sortByPhysicalPathDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'path', Sort.desc);
+      return query.addSortBy(r'physicalPath', Sort.desc);
     });
   }
 
@@ -1363,6 +1619,18 @@ extension MusicQuerySortBy on QueryBuilder<Music, Music, QSortBy> {
   QueryBuilder<Music, Music, QAfterSortBy> sortByTitleDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'title', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Music, Music, QAfterSortBy> sortByVirtualPath() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'virtualPath', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Music, Music, QAfterSortBy> sortByVirtualPathDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'virtualPath', Sort.desc);
     });
   }
 }
@@ -1416,15 +1684,15 @@ extension MusicQuerySortThenBy on QueryBuilder<Music, Music, QSortThenBy> {
     });
   }
 
-  QueryBuilder<Music, Music, QAfterSortBy> thenByPath() {
+  QueryBuilder<Music, Music, QAfterSortBy> thenByPhysicalPath() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'path', Sort.asc);
+      return query.addSortBy(r'physicalPath', Sort.asc);
     });
   }
 
-  QueryBuilder<Music, Music, QAfterSortBy> thenByPathDesc() {
+  QueryBuilder<Music, Music, QAfterSortBy> thenByPhysicalPathDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'path', Sort.desc);
+      return query.addSortBy(r'physicalPath', Sort.desc);
     });
   }
 
@@ -1451,6 +1719,18 @@ extension MusicQuerySortThenBy on QueryBuilder<Music, Music, QSortThenBy> {
       return query.addSortBy(r'title', Sort.desc);
     });
   }
+
+  QueryBuilder<Music, Music, QAfterSortBy> thenByVirtualPath() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'virtualPath', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Music, Music, QAfterSortBy> thenByVirtualPathDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'virtualPath', Sort.desc);
+    });
+  }
 }
 
 extension MusicQueryWhereDistinct on QueryBuilder<Music, Music, QDistinct> {
@@ -1475,10 +1755,10 @@ extension MusicQueryWhereDistinct on QueryBuilder<Music, Music, QDistinct> {
     });
   }
 
-  QueryBuilder<Music, Music, QDistinct> distinctByPath(
+  QueryBuilder<Music, Music, QDistinct> distinctByPhysicalPath(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'path', caseSensitive: caseSensitive);
+      return query.addDistinctBy(r'physicalPath', caseSensitive: caseSensitive);
     });
   }
 
@@ -1492,6 +1772,13 @@ extension MusicQueryWhereDistinct on QueryBuilder<Music, Music, QDistinct> {
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'title', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<Music, Music, QDistinct> distinctByVirtualPath(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'virtualPath', caseSensitive: caseSensitive);
     });
   }
 }
@@ -1521,9 +1808,9 @@ extension MusicQueryProperty on QueryBuilder<Music, Music, QQueryProperty> {
     });
   }
 
-  QueryBuilder<Music, String, QQueryOperations> pathProperty() {
+  QueryBuilder<Music, String, QQueryOperations> physicalPathProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'path');
+      return query.addPropertyName(r'physicalPath');
     });
   }
 
@@ -1536,6 +1823,12 @@ extension MusicQueryProperty on QueryBuilder<Music, Music, QQueryProperty> {
   QueryBuilder<Music, String?, QQueryOperations> titleProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'title');
+    });
+  }
+
+  QueryBuilder<Music, String, QQueryOperations> virtualPathProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'virtualPath');
     });
   }
 }

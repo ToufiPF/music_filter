@@ -1,6 +1,5 @@
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
-import 'package:music_filter/services/music_store_service.dart';
 import 'package:music_filter/services/playlist_service.dart';
 import 'package:provider/provider.dart';
 
@@ -40,9 +39,9 @@ class FileView extends StatelessWidget {
       create: (context) => CurrentFolderNotifier(root),
       child: Consumer<CurrentFolderNotifier>(
         builder: (context, current, child) => PopScope(
-            canPop: current.canGoUp,
+            canPop: !current.canGoUp,
             onPopInvoked: (didPop) {
-              if (didPop) {
+              if (!didPop) {
                 current.goUp();
               }
             },
@@ -81,7 +80,7 @@ class FileView extends StatelessWidget {
         .sortedBy((e) => e.path);
     final musics = current.musics
         .where((e) => showHidden || !e.filename.startsWith('.'))
-        .sortedBy((e) => e.path);
+        .sortedBy((e) => e.virtualPath);
     return (folders, musics);
   }
 
@@ -120,11 +119,11 @@ class FileView extends StatelessWidget {
         });
   }
 
-  Widget _trailingFolderWidget(BuildContext context, MusicFolderDto dir) => Row(
+  Widget _trailingFolderWidget(BuildContext context, MusicFolderDto folder) => Row(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            IconActions.addFolderToPlaylist(context, dir),
+            IconActions.addFolderToPlaylist(context, folder),
           ]);
 
   Widget _trailingFileWidget(BuildContext context, Music music) => Row(
