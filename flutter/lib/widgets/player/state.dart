@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
+import '../../util/toast_helper.dart';
 import 'package:provider/provider.dart';
 
 import '../../data/entities/music.dart';
@@ -29,8 +29,7 @@ class KeepStateWidget extends StatelessWidget {
           return IconButton(
             onPressed: music != null
                 ? () async {
-                    Fluttertoast.cancel().then((_) =>
-                        Fluttertoast.showToast(msg: "Marked as $nextState"));
+                    ToastHelper.showMessageWithCancel("Marked as $nextState");
                     music!.state = nextState;
                     await store.save(music!);
                   }

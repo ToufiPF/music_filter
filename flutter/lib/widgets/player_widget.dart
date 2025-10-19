@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'player/export_button.dart';
 import 'player/info.dart';
 import 'player/media.dart';
 import 'player/seekbar.dart';
@@ -12,19 +13,20 @@ class PlayerWidget extends StatelessWidget {
   const PlayerWidget({super.key});
 
   @override
-  Widget build(BuildContext context) => Column(
+  Widget build(BuildContext context) => const Column(
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Row(
               children: [
+                ExportButtonWidget(iconSize: actionIconsSize),
                 Expanded(child: MediaButtonsWidget(iconSize: mediaIconsSize)),
                 CurrentlyPlayingKeepStateWidget(iconSize: actionIconsSize),
               ],
             ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(8, 6, 8, 0),
+              padding: EdgeInsets.fromLTRB(8, 6, 8, 0),
               child: SeekBarWrapper(),
             ),
             PlayingMusicInfoWidget(),

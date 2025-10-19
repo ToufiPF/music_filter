@@ -1,7 +1,8 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
+import 'package:music_filter/services/music_store_service.dart';
+import '../util/toast_helper.dart';
 import 'package:pref/pref.dart';
 import 'package:provider/provider.dart';
 
@@ -73,11 +74,29 @@ class SettingsPage extends StatelessWidget {
             pref: Pref.showHiddenFiles.name,
             title: Text("Show hidden files"),
           ),
+          Consumer<RootFolderNotifier>(builder: (context, rootFolder, child) {
+            final store =
+                Provider.of<MusicStoreService>(context, listen: false);
+
+            return PrefButton(
+              onTap: rootFolder.rootFolder != null
+                  ? () async {
+                      final count = await store
+                          .exportTreatedMusicStates(rootFolder.exportFile!);
+                      await store.deleteTreatedMusicsFromFileStorage(
+                          rootFolder.rootFolder!);
+                      ToastHelper.showMessageWithCancel(
+                          "Exported & deleted $count musics");
+                    }
+                  : null,
+              child: Text("Export and delete treated musics"),
+            );
+          }),
           PrefButton(
             child: Text("Restore musics in recycle bin"),
             onTap: () async {
-              Fluttertoast.cancel().then((_) => Fluttertoast.showToast(
-                  msg: "Recycle bin not yet implemented"));
+              ToastHelper.showMessageWithCancel(
+                  "Recycle bin not yet implemented");
               // final catalog = Provider.of<Catalog>(context, listen: false);
               // final store = Provider.of<MusicStoreService>(context, listen: false);
               // final musics = catalog.recycleBin?.allDescendants ?? [];

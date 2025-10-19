@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:music_filter/services/music_store_service.dart';
+import '../services/music_store_service.dart';
 import 'package:provider/provider.dart';
 
 import '../data/entities/music.dart';

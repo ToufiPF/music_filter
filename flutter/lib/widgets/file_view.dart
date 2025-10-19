@@ -1,6 +1,6 @@
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
-import 'package:music_filter/services/playlist_service.dart';
+import '../services/playlist_service.dart';
 import 'package:provider/provider.dart';
 
 import '../data/entities/music.dart';

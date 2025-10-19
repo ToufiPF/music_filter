@@ -1,8 +1,8 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:music_filter/services/music_store_service.dart';
-import 'package:music_filter/services/playlist_service.dart';
+import 'services/music_store_service.dart';
+import 'services/playlist_service.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:pref/pref.dart';

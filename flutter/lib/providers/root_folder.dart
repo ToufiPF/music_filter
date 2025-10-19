@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/widgets.dart';
+import 'package:path/path.dart' as p;
 
 import '../services/music_store_service.dart';
 import '_base.dart';
@@ -11,11 +12,17 @@ class RootFolderNotifier extends NullablePrefNotifier<String> {
 
   final MusicStoreService store;
 
-  RootFolderNotifier({required super.prefService, required super.prefName, required this.store});
+  RootFolderNotifier(
+      {required super.prefService,
+      required super.prefName,
+      required this.store});
 
   /// Returns the path to the configured folder
   Directory? get rootFolder =>
       super.value != null ? Directory(super.value!) : null;
+
+  File? get exportFile =>
+      rootFolder != null ? File(p.join(rootFolder!.path, 'export.csv')) : null;
 
   Future<bool> pickFolder(Directory? initialDir) async {
     String? picked = await FilePicker.platform.getDirectoryPath(

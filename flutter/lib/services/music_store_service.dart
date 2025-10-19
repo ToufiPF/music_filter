@@ -31,7 +31,7 @@ class MusicStoreService {
     _stream.add(null);
   }
 
-  Future<void> exportTreatedMusicStates(File file) async {
+  Future<int?> exportTreatedMusicStates(File file) async {
     IOSink? sink;
     try {
       await file.parent.create(recursive: true);
@@ -44,9 +44,11 @@ class MusicStoreService {
       }
 
       await sink.flush();
+      return toExport.length;
     } catch (e) {
       debugPrint(
           "[$tag] Caught exception when exporting music states to ${file.path}");
+      return null;
     } finally {
       sink?.close();
     }
