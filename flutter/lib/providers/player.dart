@@ -1,11 +1,11 @@
 import 'package:just_audio/just_audio.dart';
 
-import 'playlist.dart';
+import '../services/playlist_service.dart';
 
 mixin PlayerController {
   /// Attaches a [PlayerQueueNotifier] to this [PlayerController]
   /// Should be called at least once before calling other methods
-  Future<void> attachPlaylistController(PlayerQueueNotifier controller);
+  Future<void> attachPlaylistController(PlaylistService controller);
 
   /// Plays the song at the given index,
   /// or just toggles playing state on the current music is index is null
@@ -53,21 +53,16 @@ abstract class PlayerStateController
 class JustAudioPlayerController extends PlayerStateController {
   static const tag = "PlayerProvider";
 
-  late JustAudioQueueNotifier _playlistController;
+  late PlaylistService _playlistController;
   final AudioPlayer _player = AudioPlayer();
 
   // ===========================================================================
   // PlayerController
   @override
-  Future<void> attachPlaylistController(PlayerQueueNotifier controller) async {
-    if (controller is JustAudioQueueNotifier) {
-      _playlistController = controller;
-      _player.setAudioSource(controller.audioSource,
-          preload: true, initialIndex: 0, initialPosition: Duration.zero);
-    } else {
-      throw UnsupportedError(
-          "PlaylistController should be a JustAudioPlaylistController but was $controller");
-    }
+  Future<void> attachPlaylistController(PlaylistService controller) async {
+    _playlistController = controller;
+    _player.setAudioSource(_playlistController.audioSource,
+        preload: true, initialIndex: 0, initialPosition: Duration.zero);
   }
 
   @override

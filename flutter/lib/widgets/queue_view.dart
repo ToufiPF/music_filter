@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:path/path.dart' as p;
+import 'package:provider/provider.dart';
 
-import '../models/state_store.dart';
+import '../data/entities/music.dart';
 import '../providers/player.dart';
-import '../providers/playlist.dart';
+import '../services/playlist_service.dart';
 import '../util/constants.dart';
-import '../widgets/context_menu.dart';
 import '../widgets/player/state.dart';
 
 class QueueView extends StatelessWidget {
-  static const double iconSize = 32;
+  static const double iconSize = 28;
   static const prototype = ListTile(
       title: Text("Filename"),
       subtitle: Column(
@@ -29,18 +28,22 @@ class QueueView extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           KeepStateWidget(music: null, iconSize: iconSize),
-          Icon(Icons.check, size: iconSize),
         ],
       ));
 
   const QueueView({super.key});
 
   @override
-  Widget build(BuildContext context) =>
-      Consumer2<PlayerQueueNotifier, PlayerStateController>(
-          builder: (context, queue, player, child) {
-        final store = Provider.of<StateStore>(context, listen: false);
-        return queue.queue.isEmpty
+  Widget build(BuildContext context) {
+    final playlist = Provider.of<PlaylistService>(context, listen: false);
+    final player = Provider.of<PlayerStateController>(context, listen: false);
+
+    return StreamBuilder<List<Music>>(
+      initialData: [],
+      stream: playlist.playlist(),
+      builder: (context, snapshot) {
+        final musics = snapshot.requireData;
+        return musics.isEmpty
             ? Center(
                 child: Text("Nothing to play !\n"
                     "Start by adding some songs to the queue"))
@@ -49,33 +52,33 @@ class QueueView extends StatelessWidget {
                 buildDefaultDragHandles: false,
                 shrinkWrap: true,
                 prototypeItem: prototype,
-                itemCount: queue.queue.length,
-                onReorder: queue.move,
+                itemCount: musics.length,
+                onReorder: playlist.reorder,
                 // Trigger rebuild only if currently played index goes to != to == or vice-versa
                 itemBuilder: (context, musicIdx) => StreamBuilder<bool>(
                     key: Key(musicIdx.toString()),
                     initialData: player.indexInPlaylist == musicIdx,
                     stream: player.indexInPlaylistStream
                         .map((currentIdx) => currentIdx == musicIdx),
-                    builder: (context, snapshot) => _buildTile(
+                    builder: (context, snapshot2) => _buildTile(
                           context,
-                          queue,
                           player,
-                          store,
+                          musics,
                           musicIdx,
-                          snapshot.requireData,
+                          snapshot2.requireData,
                         )));
-      });
+      },
+    );
+  }
 
   Widget _buildTile(
     BuildContext context,
-    PlayerQueueNotifier queue,
     PlayerStateController player,
-    StateStore store,
+    List<Music> playlistQueue,
     int musicIdx,
     bool isSongPlaying,
   ) {
-    final music = queue.queue[musicIdx];
+    final music = playlistQueue[musicIdx];
     return ListTile(
       dense: true,
       selected: isSongPlaying,
@@ -84,8 +87,8 @@ class QueueView extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Constants.scrollingText(music.displayArtist),
-          Constants.scrollingText(p.basename(music.path),
+          Constants.scrollingText(music.artists ?? ''),
+          Constants.scrollingText(p.basename(music.virtualPath),
               style: TextStyle(fontStyle: FontStyle.italic)),
         ],
       ),
@@ -97,11 +100,6 @@ class QueueView extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           KeepStateWidget(music: music, iconSize: iconSize),
-          StreamBuilder<KeepState>(
-              initialData: KeepState.unspecified,
-              stream: store.watchState(music, fireImmediately: true),
-              builder: (context, snapshot) => IconActions.exportActionMusic(
-                  context, music, snapshot.data!)),
         ],
       ),
       onTap: () {
