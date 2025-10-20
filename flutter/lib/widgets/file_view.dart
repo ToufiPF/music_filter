@@ -1,13 +1,15 @@
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
-import '../services/playlist_service.dart';
 import 'package:provider/provider.dart';
 
 import '../data/entities/music.dart';
+import '../data/enums/state.dart';
 import '../data/models/music_folder.dart';
 import '../providers/folders.dart';
+import '../services/music_store_service.dart';
+import '../services/playlist_service.dart';
 import '../util/constants.dart';
-import 'context_menu.dart';
+import 'icon_actions.dart';
 
 class CurrentFolderNotifier extends ChangeNotifier {
   CurrentFolderNotifier(this.current);
@@ -119,17 +121,29 @@ class FileView extends StatelessWidget {
         });
   }
 
-  Widget _trailingFolderWidget(BuildContext context, MusicFolderDto folder) => Row(
+  Widget _trailingFolderWidget(BuildContext context, MusicFolderDto folder) =>
+      Row(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             IconActions.addFolderToPlaylist(context, folder),
           ]);
 
-  Widget _trailingFileWidget(BuildContext context, Music music) => Row(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            IconActions.addMusicToPlaylist(context, music),
-          ]);
+  Widget _trailingFileWidget(BuildContext context, Music music) {
+    final store = Provider.of<MusicStoreService>(context, listen: false);
+    return Row(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          StreamBuilder<KeepState>(
+            initialData: KeepState.unspecified,
+            stream: store.watchState(music),
+            builder: (context, snapshot) => IconActions.toggleNextState(
+                snapshot.requireData.nextToggleState,
+                context,
+                music,
+                snapshot.requireData),
+          ),
+        ]);
+  }
 }

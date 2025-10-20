@@ -53,7 +53,7 @@ def prompt_for_proceed(prompt: str) -> bool:
             print(f'Invalid response {res}.')
 
 
-def run_directives(src_dir: 'Path', dst_dir: 'Path', directives: 'dict[Path, str]', default_state: 'State | None'):
+def run_directives(src_dir: 'Path', dst_dir: 'Path', directives: 'dict[str, State]', default_state: 'State | None'):
     copied = 0
 
     sorted: 'dict[State, set[str]]' = {

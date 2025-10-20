@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import '../../util/toast_helper.dart';
 import 'package:provider/provider.dart';
 
 import '../../data/entities/music.dart';
 import '../../data/enums/state.dart';
 import '../../services/music_store_service.dart';
+import '../icon_actions.dart';
 import '_helper.dart';
 
 class KeepStateWidget extends StatelessWidget {
@@ -24,19 +24,12 @@ class KeepStateWidget extends StatelessWidget {
     return StreamBuilder<KeepState>(
         initialData: KeepState.unspecified,
         stream: music != null ? store.watchState(music!) : null,
-        builder: (context, snapshot) {
-          final nextState = snapshot.requireData.nextToggleState;
-          return IconButton(
-            onPressed: music != null
-                ? () async {
-                    ToastHelper.showMessageWithCancel("Marked as $nextState");
-                    music!.state = nextState;
-                    await store.save(music!);
-                  }
-                : null,
-            icon: Icon(nextState.icon, size: iconSize),
-          );
-        });
+        builder: (context, snapshot) => IconActions.toggleNextState(
+            snapshot.requireData.nextToggleState,
+            context,
+            music,
+            snapshot.requireData,
+            iconSize: iconSize));
   }
 }
 

@@ -16,7 +16,7 @@ class ExportButtonWidget extends StatelessWidget {
 
     return Consumer<RootFolderNotifier>(
         builder: (context, rootFolder, child) => IconButton(
-            icon: Icon(Icons.import_export),
+            icon: Icon(Icons.file_upload),
             onPressed: rootFolder.exportFile != null
                 ? () async {
                     final count = await store
