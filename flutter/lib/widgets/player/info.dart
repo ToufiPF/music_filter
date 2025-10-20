@@ -1,8 +1,8 @@
 import 'package:flutter/widgets.dart';
-import '_helper.dart';
 
 import '../../data/entities/music.dart';
 import '../../util/constants.dart';
+import '_helper.dart';
 
 class PlayingMusicInfoWidget extends StatelessWidget {
   const PlayingMusicInfoWidget({super.key});

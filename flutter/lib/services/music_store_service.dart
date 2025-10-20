@@ -17,9 +17,9 @@ class MusicStoreService {
 
   final Isar db;
   final IsarCollection<Music> musics;
-  final _stream = BehaviorSubject<MusicFolderDto?>();
+  final _stream = BehaviorSubject<MusicFolder?>();
 
-  Stream<MusicFolderDto?> get catalog => _stream.stream;
+  Stream<MusicFolder?> get catalog => _stream.stream;
 
   MusicStoreService(this.db) : musics = db.musics {
     _refreshStream();
@@ -86,9 +86,9 @@ class MusicStoreService {
     await _refreshStream();
   }
 
-  Future<MusicFolderDto> getAll(KeepState? state) async {
+  Future<MusicFolder> getAll(KeepState? state) async {
     final allPersisted = await _getAll(state);
-    return MusicFolderDto.buildMusicHierarchy(allPersisted);
+    return MusicFolder.buildMusicHierarchy(allPersisted);
   }
 
   Future<List<Music>> _getAll(KeepState? state) async {

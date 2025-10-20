@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:path/path.dart' as p;
+import 'package:provider/provider.dart';
 
 import '../data/entities/music.dart';
-import '../services/playlist_service.dart';
 import '../providers/player.dart';
+import '../services/playlist_service.dart';
 import '../util/constants.dart';
 import '../widgets/player/state.dart';
 

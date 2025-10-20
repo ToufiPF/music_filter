@@ -1,4 +1,5 @@
 import 'package:just_audio/just_audio.dart';
+
 import '../services/playlist_service.dart';
 
 mixin PlayerController {

@@ -14,11 +14,11 @@ import 'icon_actions.dart';
 class CurrentFolderNotifier extends ChangeNotifier {
   CurrentFolderNotifier(this.current);
 
-  MusicFolderDto current;
+  MusicFolder current;
 
   bool get canGoUp => current.parent != null;
 
-  void goTo(MusicFolderDto folder) {
+  void goTo(MusicFolder folder) {
     current = folder;
     notifyListeners();
   }
@@ -34,7 +34,7 @@ class FileView extends StatelessWidget {
 
   const FileView({super.key, required this.root});
 
-  final MusicFolderDto root;
+  final MusicFolder root;
 
   @override
   Widget build(BuildContext context) => ChangeNotifierProvider(
@@ -74,7 +74,7 @@ class FileView extends StatelessWidget {
             )),
       ));
 
-  (List<MusicFolderDto>, List<Music>) _getEntriesToShow(MusicFolderDto current,
+  (List<MusicFolder>, List<Music>) _getEntriesToShow(MusicFolder current,
       {required bool showHidden, required bool showEmpty}) {
     final folders = current.children.values
         .where((e) => showHidden || !e.folderName.startsWith('.'))
@@ -88,7 +88,7 @@ class FileView extends StatelessWidget {
 
   Widget _listView(
     BuildContext context,
-    List<MusicFolderDto> folders,
+    List<MusicFolder> folders,
     List<Music> musics,
   ) {
     final current = Provider.of<CurrentFolderNotifier>(context, listen: false);
@@ -121,7 +121,7 @@ class FileView extends StatelessWidget {
         });
   }
 
-  Widget _trailingFolderWidget(BuildContext context, MusicFolderDto folder) =>
+  Widget _trailingFolderWidget(BuildContext context, MusicFolder folder) =>
       Row(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.center,

@@ -10,7 +10,7 @@ import '../util/toast_helper.dart';
 
 class IconActions {
   static Widget addFolderToPlaylist(
-      BuildContext context, MusicFolderDto folder) {
+      BuildContext context, MusicFolder folder) {
     final playlist = Provider.of<PlaylistService>(context, listen: false);
 
     return IconButton(

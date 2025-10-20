@@ -4,9 +4,9 @@ import 'package:path/path.dart' as p;
 
 import '../entities/music.dart';
 
-class MusicFolderDto {
-  static MusicFolderDto buildMusicHierarchy(List<Music> musics) {
-    final root = MusicFolderDto(path: '');
+class MusicFolder {
+  static MusicFolder buildMusicHierarchy(List<Music> musics) {
+    final root = MusicFolder(path: '');
     for (var m in musics) {
       final parent = lookupOrCreate(root, '', m.parentPath.split('/'), 0);
       parent.musics.add(m);
@@ -14,18 +14,18 @@ class MusicFolderDto {
     return root;
   }
 
-  static MusicFolderDto lookupOrCreate(MusicFolderDto parent, String prefix, List<String> splits, int depth) {
+  static MusicFolder lookupOrCreate(MusicFolder parent, String prefix, List<String> splits, int depth) {
     if (depth >= splits.length) {
       return parent;
     }
 
     final key = splits[depth];
     prefix = p.join(prefix, key);
-    final child = parent.children.putIfAbsent(key, () => MusicFolderDto(path: prefix, parent: parent));
+    final child = parent.children.putIfAbsent(key, () => MusicFolder(path: prefix, parent: parent));
     return lookupOrCreate(child, prefix, splits, depth + 1);
   }
 
-  MusicFolderDto({
+  MusicFolder({
     required this.path,
     this.parent
   });
@@ -34,10 +34,10 @@ class MusicFolderDto {
   final String path;
 
   /// Parent music folder, or null if this folder is at the root
-  final MusicFolderDto? parent;
+  final MusicFolder? parent;
 
   /// Children music folder
-  final Map<String, MusicFolderDto> children = HashMap();
+  final Map<String, MusicFolder> children = HashMap();
 
   /// Direct children musics
   final List<Music> musics = [];

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import '../data/models/music_folder.dart';
-import '../services/music_store_service.dart';
 import 'package:provider/provider.dart';
 
+import '../data/models/music_folder.dart';
 import '../providers/active_tabs.dart';
 import '../providers/root_folder.dart';
+import '../services/music_store_service.dart';
 import '../settings/active_tabs.dart';
 import '../settings/settings.dart';
 import '../widgets/file_view.dart';
@@ -56,7 +56,7 @@ class _HomePageState extends State<HomePage> {
   Widget _bodyForTab(
           BuildContext context, AvailableTab tab, MusicStoreService store) =>
       switch (tab) {
-        AvailableTab.folder => StreamBuilder<MusicFolderDto?>(
+        AvailableTab.folder => StreamBuilder<MusicFolder?>(
             stream: store.catalog,
             builder: (context, snapshot) {
               final musicRoot = snapshot.data;
