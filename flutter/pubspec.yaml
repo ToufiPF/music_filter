@@ -44,15 +44,14 @@ dependencies:
   isar_flutter_libs: *isar_version        # contains Isar Core
   # isar: ^3.1.0
   # isar_flutter_libs: ^3.1.0
-  flutter_media_metadata: ^1.0.0+1        # Fetch audio tags from File
+  flutter_audio_toolkit: ^1.0.0
   audio_service: ^0.18.0
   just_audio: ^0.10.5                     # Audio player
   just_audio_platform_interface: ^4.2.0
   rxdart: ^0.28.0
   fluttertoast: ^9.0.0
   text_scroll: ^0.2.0                     # auto-scrolling text
-# dependency_overrides:
-#   fluttertoast: '8.2.14'
+
 
 dev_dependencies:
   flutter_test:

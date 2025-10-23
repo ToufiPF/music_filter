@@ -12,11 +12,28 @@ allprojects {
 rootProject.buildDir = '../build'
 subprojects {
     project.buildDir = "${rootProject.buildDir}/${project.name}"
+
+    afterEvaluate { project ->
+        if (project.hasProperty('android')) {
+            project.android {
+                if ((project.plugins.hasPlugin("com.android.application") || project.plugins.hasPlugin("com.android.library"))
+                    && compileSdkVersion != flutter.compileSdkVersion) {
+                    println("=== WORKAROUND === Setting compileSdkVersion in afterEvaluate for project ${project.group} to ${flutter.compileSdkVersion}")
+                    compileSdkVersion flutter.compileSdkVersion
+                }
+
+                if (namespace == null) {
+                    println("=== WORKAROUND === Setting namespace in afterEvaluate for project ${project.group}")
+                    namespace project.group
+                }
+            }
+        }
+    }
 }
+
 subprojects {
     project.evaluationDependsOn(':app')
 }
-
 tasks.register("clean", Delete) {
     delete rootProject.buildDir
 }

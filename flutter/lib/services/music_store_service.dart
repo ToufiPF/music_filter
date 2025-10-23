@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/widgets.dart';
-import 'package:flutter_media_metadata/flutter_media_metadata.dart';
+import 'package:flutter_audio_toolkit/flutter_audio_toolkit.dart';
 import 'package:isar/isar.dart';
 import 'package:path/path.dart' as p;
 import 'package:rxdart/rxdart.dart';
@@ -174,16 +174,22 @@ class MusicStoreService {
 
   Future<Music?> _fetchTags(File file, String path) async {
     try {
+      final toolkit = FlutterAudioToolkit();
       final metadata =
-          await MetadataRetriever.fromFile(file).timeout(Duration(seconds: 50));
+          // await MetadataRetriever.fromFile(file).timeout(Duration(seconds: 50));
+          await toolkit.extractMetadata(file.path);
       return Music(
         physicalPath: file.path,
         virtualPath: path,
-        title: metadata.trackName,
-        artists: (metadata.trackArtistNames?.map((e) => e.toString()) ?? [])
-            .join('; '),
-        album: metadata.albumName,
-        albumArtist: metadata.albumArtistName,
+        // title: metadata.trackName,
+        // artists: (metadata.trackArtistNames?.map((e) => e.toString()) ?? [])
+        //     .join('; '),
+        // album: metadata.albumName,
+        // albumArtist: metadata.albumArtistName,
+        title: metadata.title,
+        artists: metadata.artist,
+        album: metadata.album,
+        albumArtist: metadata.albumArtist,
       );
     } catch (e) {
       debugPrint("[$tag]_fetchTag(${file.path}) caught error: $e");
