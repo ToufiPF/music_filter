@@ -17,8 +17,8 @@ subprojects {
         if (project.hasProperty('android')) {
             project.android {
                 if ((project.plugins.hasPlugin("com.android.application") || project.plugins.hasPlugin("com.android.library"))
-                    && compileSdkVersion != flutter.compileSdkVersion) {
-                    println("=== WORKAROUND === Setting compileSdkVersion in afterEvaluate for project ${project.group} to ${flutter.compileSdkVersion}")
+                    && compileSdkVersion < "android-34") {
+                    println("=== WORKAROUND === Setting compileSdkVersion in afterEvaluate for project ${project.group} to ${flutter.compileSdkVersion} (was $compileSdkVersion)")
                     compileSdkVersion flutter.compileSdkVersion
                 }
 
