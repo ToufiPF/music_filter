@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:music_filter/services/music_store_service.dart';
+import 'package:music_filter/services/playlist_service.dart';
 import 'package:pref/pref.dart';
 import 'package:provider/provider.dart';
 
@@ -77,6 +78,8 @@ class SettingsPage extends StatelessWidget {
           Consumer<RootFolderNotifier>(builder: (context, rootFolder, child) {
             final store =
                 Provider.of<MusicStoreService>(context, listen: false);
+            final playlist =
+                Provider.of<PlaylistService>(context, listen: false);
 
             return PrefButton(
               onTap: rootFolder.rootFolder != null
@@ -85,6 +88,7 @@ class SettingsPage extends StatelessWidget {
                           .exportTreatedMusicStates(rootFolder.exportFile!);
                       await store.deleteTreatedMusicsFromFileStorage(
                           rootFolder.rootFolder!);
+                      await playlist.removeTreatedMusics();
                       ToastHelper.showMessageWithCancel(
                           "Exported & deleted $count musics");
                     }
@@ -109,9 +113,12 @@ class SettingsPage extends StatelessWidget {
           ),
           PrefButton(
             child: Text("Select folder"),
-            onTap: () {
+            onTap: () async {
               final root =
                   Provider.of<RootFolderNotifier>(context, listen: false);
+              final playlist =
+                  Provider.of<PlaylistService>(context, listen: false);
+              await playlist.clear();
               root.pickFolder(root.rootFolder);
             },
           ),

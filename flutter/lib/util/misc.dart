@@ -19,6 +19,7 @@ extension StringExtensions on String {
   String escapeDoubleQuotes() =>
       replaceAll('"', '\\"').replaceAll('\\', '\\\\');
 
+  /// Returns null if this string is empty ; otherwise just return this string
   String? nullIfEmpty() => length == 0 ? null : this;
 }
 
