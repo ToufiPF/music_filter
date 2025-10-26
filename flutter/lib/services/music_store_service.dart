@@ -175,21 +175,13 @@ class MusicStoreService {
   Future<Music?> _fetchTags(File file, String path) async {
     try {
       final toolkit = FlutterAudioToolkit();
-      final metadata =
-          // await MetadataRetriever.fromFile(file).timeout(Duration(seconds: 50));
-          await toolkit.extractMetadata(file.path);
+      final metadata = await toolkit.getAudioInfo(file.path);
       return Music(
         physicalPath: file.path,
         virtualPath: path,
-        // title: metadata.trackName,
-        // artists: (metadata.trackArtistNames?.map((e) => e.toString()) ?? [])
-        //     .join('; '),
-        // album: metadata.albumName,
-        // albumArtist: metadata.albumArtistName,
-        title: metadata.title,
-        artists: metadata.artist,
-        album: metadata.album,
-        albumArtist: metadata.albumArtist,
+        title: metadata.title?.nullIfEmpty(),
+        artists: metadata.artist?.nullIfEmpty(),
+        album: metadata.album?.nullIfEmpty(),
       );
     } catch (e) {
       debugPrint("[$tag]_fetchTag(${file.path}) caught error: $e");
