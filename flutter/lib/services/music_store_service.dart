@@ -37,13 +37,16 @@ class MusicStoreService {
       await file.parent.create(recursive: true);
       sink = file.openWrite(mode: FileMode.writeOnlyAppend);
 
-      final toExport =
-          await musics.where().stateNotEqualTo(KeepState.unspecified).findAll();
+      final toExport = await musics.where().needsExportEqualTo(true).findAll();
       for (var m in toExport) {
         sink.writeln("\"${m.virtualPath.escapeDoubleQuotes()}\", ${m.state}");
+        m.needsExport = false;
       }
 
       await sink.flush();
+      await db.writeTxn(() async {
+        await musics.putAll(toExport);
+      });
       return toExport.length;
     } catch (e) {
       debugPrint(
@@ -102,8 +105,10 @@ class MusicStoreService {
   }
 
   /// Persist the music changes to the DB
-  Future<void> save(Music music) async {
+  Future<void> setState(Music music, KeepState state) async {
     await db.writeTxn(() async {
+      music.state = state;
+      music.needsExport = true;
       await musics.put(music);
     });
   }
