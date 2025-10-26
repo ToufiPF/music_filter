@@ -48,7 +48,7 @@ class _HomePageState extends State<HomePage> {
                       )
                   ],
                 ),
-                bottomSheet: PlayerWidget(),
+                bottomSheet: const PlayerWidget(),
               ),
             ));
   }
