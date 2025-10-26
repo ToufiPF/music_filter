@@ -30,27 +30,28 @@ dependencies:
   meta: ^1.9.0              # Meta class information (e.g. protected annotations)
   async: ^2.11.0            # Extensions for async operations
   collection: ^1.17.0       # More operations on collections
-  intl: ^0.19.0             # Localization
+  intl: ^0.20.2             # Localization
   provider: ^6.0.0          # Provider/Notifier for application-wide state
   cupertino_icons: ^1.0.2   # CupertinoIcons class for iOS style icons.
-  permission_handler: ^11.2.0   # Check/request for permissions on Android/iOS
+  permission_handler: ^12.0.1   # Check/request for permissions on Android/iOS
   shared_preferences: ^2.1.0    # SharedPreferences / NSUserDefaults wrapper
   pref: ^2.7.0                  # Preferences screen
   path: ^1.8.3                  # Path manipulation (e.g. os.path.join like)
   path_provider: ^2.0.15        # Paths for storage
-  file_picker: ^8.0.0+1           # File/Folder picker
-  device_info_plus: ^10.0.1      # OS version code
+  file_picker: ^10.3.3           # File/Folder picker
+  device_info_plus: ^12.2.0      # OS version code
   isar: *isar_version           # Local NoSQL DB
   isar_flutter_libs: *isar_version        # contains Isar Core
-  flutter_media_metadata: ^1.0.0+1        # Fetch audio tags from File
+  # isar: ^3.1.0
+  # isar_flutter_libs: ^3.1.0
+  flutter_audio_toolkit: ^1.0.0
   audio_service: ^0.18.0
-  just_audio: ^0.9.30                     # Audio player
+  just_audio: ^0.10.5                     # Audio player
   just_audio_platform_interface: ^4.2.0
-  rxdart: ^0.27.0
-  fluttertoast: ^8.2.14
+  rxdart: ^0.28.0
+  fluttertoast: ^9.0.0
   text_scroll: ^0.2.0                     # auto-scrolling text
-# dependency_overrides:
-#   fluttertoast: '8.2.14'
+
 
 dev_dependencies:
   flutter_test:
@@ -59,10 +60,11 @@ dev_dependencies:
   # For generating isar schemas, run:
   # flutter pub run build_runner build
   isar_generator: *isar_version
+  # isar_generator: ^3.1.0
   build_runner: ^2.4.4
 
   # Configure lints in `analysis_options.yaml`
-  flutter_lints: ^3.0.1
+  flutter_lints: ^6.0.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

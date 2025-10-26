@@ -87,7 +87,7 @@ class QueueView extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Constants.scrollingText(music.artists ?? ''),
+          Constants.scrollingText(music.artists ?? music.albumArtist ?? ''),
           Constants.scrollingText(p.basename(music.virtualPath),
               style: TextStyle(fontStyle: FontStyle.italic)),
         ],

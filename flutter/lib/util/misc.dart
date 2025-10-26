@@ -18,6 +18,8 @@ extension StringExtensions on String {
   /// Returns the same string with " and \\ (quotes and anti-slashes) escaped
   String escapeDoubleQuotes() =>
       replaceAll('"', '\\"').replaceAll('\\', '\\\\');
+
+  String? nullIfEmpty() => length == 0 ? null : this;
 }
 
 extension IndicesListExtensions on Iterable<int> {
