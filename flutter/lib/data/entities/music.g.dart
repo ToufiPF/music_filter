@@ -32,24 +32,29 @@ const MusicSchema = CollectionSchema(
       name: r'artists',
       type: IsarType.string,
     ),
-    r'physicalPath': PropertySchema(
+    r'needsExport': PropertySchema(
       id: 3,
+      name: r'needsExport',
+      type: IsarType.bool,
+    ),
+    r'physicalPath': PropertySchema(
+      id: 4,
       name: r'physicalPath',
       type: IsarType.string,
     ),
     r'state': PropertySchema(
-      id: 4,
+      id: 5,
       name: r'state',
       type: IsarType.byte,
       enumMap: _MusicstateEnumValueMap,
     ),
     r'title': PropertySchema(
-      id: 5,
+      id: 6,
       name: r'title',
       type: IsarType.string,
     ),
     r'virtualPath': PropertySchema(
-      id: 6,
+      id: 7,
       name: r'virtualPath',
       type: IsarType.string,
     )
@@ -94,6 +99,19 @@ const MusicSchema = CollectionSchema(
       properties: [
         IndexPropertySchema(
           name: r'state',
+          type: IndexType.value,
+          caseSensitive: false,
+        )
+      ],
+    ),
+    r'needsExport': IndexSchema(
+      id: -2010071360182289675,
+      name: r'needsExport',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'needsExport',
           type: IndexType.value,
           caseSensitive: false,
         )
@@ -152,10 +170,11 @@ void _musicSerialize(
   writer.writeString(offsets[0], object.album);
   writer.writeString(offsets[1], object.albumArtist);
   writer.writeString(offsets[2], object.artists);
-  writer.writeString(offsets[3], object.physicalPath);
-  writer.writeByte(offsets[4], object.state.index);
-  writer.writeString(offsets[5], object.title);
-  writer.writeString(offsets[6], object.virtualPath);
+  writer.writeBool(offsets[3], object.needsExport);
+  writer.writeString(offsets[4], object.physicalPath);
+  writer.writeByte(offsets[5], object.state.index);
+  writer.writeString(offsets[6], object.title);
+  writer.writeString(offsets[7], object.virtualPath);
 }
 
 Music _musicDeserialize(
@@ -168,12 +187,13 @@ Music _musicDeserialize(
     album: reader.readStringOrNull(offsets[0]),
     albumArtist: reader.readStringOrNull(offsets[1]),
     artists: reader.readStringOrNull(offsets[2]),
-    physicalPath: reader.readString(offsets[3]),
-    title: reader.readStringOrNull(offsets[5]),
-    virtualPath: reader.readString(offsets[6]),
+    physicalPath: reader.readString(offsets[4]),
+    title: reader.readStringOrNull(offsets[6]),
+    virtualPath: reader.readString(offsets[7]),
   );
   object.id = id;
-  object.state = _MusicstateValueEnumMap[reader.readByteOrNull(offsets[4])] ??
+  object.needsExport = reader.readBool(offsets[3]);
+  object.state = _MusicstateValueEnumMap[reader.readByteOrNull(offsets[5])] ??
       KeepState.unspecified;
   return object;
 }
@@ -192,13 +212,15 @@ P _musicDeserializeProp<P>(
     case 2:
       return (reader.readStringOrNull(offset)) as P;
     case 3:
-      return (reader.readString(offset)) as P;
+      return (reader.readBool(offset)) as P;
     case 4:
+      return (reader.readString(offset)) as P;
+    case 5:
       return (_MusicstateValueEnumMap[reader.readByteOrNull(offset)] ??
           KeepState.unspecified) as P;
-    case 5:
-      return (reader.readStringOrNull(offset)) as P;
     case 6:
+      return (reader.readStringOrNull(offset)) as P;
+    case 7:
       return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -347,6 +369,14 @@ extension MusicQueryWhereSort on QueryBuilder<Music, Music, QWhere> {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
         const IndexWhereClause.any(indexName: r'state'),
+      );
+    });
+  }
+
+  QueryBuilder<Music, Music, QAfterWhere> anyNeedsExport() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        const IndexWhereClause.any(indexName: r'needsExport'),
       );
     });
   }
@@ -594,6 +624,51 @@ extension MusicQueryWhere on QueryBuilder<Music, Music, QWhereClause> {
         upper: [upperState],
         includeUpper: includeUpper,
       ));
+    });
+  }
+
+  QueryBuilder<Music, Music, QAfterWhereClause> needsExportEqualTo(
+      bool needsExport) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'needsExport',
+        value: [needsExport],
+      ));
+    });
+  }
+
+  QueryBuilder<Music, Music, QAfterWhereClause> needsExportNotEqualTo(
+      bool needsExport) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'needsExport',
+              lower: [],
+              upper: [needsExport],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'needsExport',
+              lower: [needsExport],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'needsExport',
+              lower: [needsExport],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'needsExport',
+              lower: [],
+              upper: [needsExport],
+              includeUpper: false,
+            ));
+      }
     });
   }
 }
@@ -1083,6 +1158,16 @@ extension MusicQueryFilter on QueryBuilder<Music, Music, QFilterCondition> {
         includeLower: includeLower,
         upper: upper,
         includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<Music, Music, QAfterFilterCondition> needsExportEqualTo(
+      bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'needsExport',
+        value: value,
       ));
     });
   }
@@ -1586,6 +1671,18 @@ extension MusicQuerySortBy on QueryBuilder<Music, Music, QSortBy> {
     });
   }
 
+  QueryBuilder<Music, Music, QAfterSortBy> sortByNeedsExport() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'needsExport', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Music, Music, QAfterSortBy> sortByNeedsExportDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'needsExport', Sort.desc);
+    });
+  }
+
   QueryBuilder<Music, Music, QAfterSortBy> sortByPhysicalPath() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'physicalPath', Sort.asc);
@@ -1684,6 +1781,18 @@ extension MusicQuerySortThenBy on QueryBuilder<Music, Music, QSortThenBy> {
     });
   }
 
+  QueryBuilder<Music, Music, QAfterSortBy> thenByNeedsExport() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'needsExport', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Music, Music, QAfterSortBy> thenByNeedsExportDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'needsExport', Sort.desc);
+    });
+  }
+
   QueryBuilder<Music, Music, QAfterSortBy> thenByPhysicalPath() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'physicalPath', Sort.asc);
@@ -1755,6 +1864,12 @@ extension MusicQueryWhereDistinct on QueryBuilder<Music, Music, QDistinct> {
     });
   }
 
+  QueryBuilder<Music, Music, QDistinct> distinctByNeedsExport() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'needsExport');
+    });
+  }
+
   QueryBuilder<Music, Music, QDistinct> distinctByPhysicalPath(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
@@ -1805,6 +1920,12 @@ extension MusicQueryProperty on QueryBuilder<Music, Music, QQueryProperty> {
   QueryBuilder<Music, String?, QQueryOperations> artistsProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'artists');
+    });
+  }
+
+  QueryBuilder<Music, bool, QQueryOperations> needsExportProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'needsExport');
     });
   }
 

@@ -41,8 +41,7 @@ class IconActions {
         onPressed: music != null
             ? () async {
                 ToastHelper.showMessageWithCancel("Marked as $state");
-                music.state = state;
-                await store.save(music);
+                await store.setState(music, state);
               }
             : null);
   }

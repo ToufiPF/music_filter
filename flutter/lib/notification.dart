@@ -575,8 +575,7 @@ class _PlayerAudioHandler extends BaseAudioHandler
     final music = currentMusic;
     if (music != null) {
       final nextState = _currentMusicState.value.nextToggleState;
-      music.state = nextState;
-      await _stateStore.save(music);
+      await _stateStore.setState(music, nextState);
       _broadcastState();
     }
   }

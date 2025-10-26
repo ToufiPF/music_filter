@@ -47,6 +47,9 @@ class Music implements Comparable<Music> {
   @enumerated
   KeepState state = KeepState.unspecified;
 
+  @Index()
+  bool needsExport = false;
+
   /// Basename of the file, computed from [virtualPath]
   @ignore
   String get filename => p.basenameWithoutExtension(virtualPath);
