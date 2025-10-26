@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:isar/isar.dart';
 import 'package:path/path.dart' as p;
@@ -52,6 +53,7 @@ Future<void> main() async {
     musicStore: musicStore,
   );
 
+  final packageInfo = await PackageInfo.fromPlatform();
   final PlayerStateController player = JustAudioPlayerController();
   player.attachPlaylistController(playlist);
 
@@ -71,20 +73,20 @@ Future<void> main() async {
     ],
     child: PrefService(
       service: prefService,
-      child: MyApp(),
+      child: MyApp(title: "MusicFilter", version: packageInfo.version),
     ),
   ));
 }
 
 class MyApp extends StatelessWidget {
-  static const String title = "MusicFilter";
-  static const String version = "1.1.0";
+  final String title;
+  final String version;
 
-  const MyApp({super.key});
+  const MyApp({super.key, required this.title, required this.version});
 
   @override
   Widget build(BuildContext context) => MaterialApp(
-          title: MyApp.title,
+          title: title,
           theme: ThemeData(
             colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
             useMaterial3: true,
@@ -94,13 +96,14 @@ class MyApp extends StatelessWidget {
           routes: {
             '/initial': _initialPage,
             '/home': _homePage,
-            '/settings': _settingsPage,
-            '/licenses': (_) => LicensePage(
-                  applicationName: MyApp.title,
-                  applicationVersion: MyApp.version,
-                  applicationIcon: null,
-                  applicationLegalese: null,
-                ),
+            '/licenses': (_) => SafeArea(
+              child: LicensePage(
+                    applicationName: title,
+                    applicationVersion: version,
+                    applicationIcon: null,
+                    applicationLegalese: null,
+                  ),
+            ),
           });
 
   Widget _initialPage(BuildContext context) {
@@ -116,16 +119,16 @@ class MyApp extends StatelessWidget {
 
   Widget _requestPermissions(BuildContext context, PermissionsNotifier perm,
           List<PermissionGroup> required) =>
-      Scaffold(
-        body: Center(
-          child: ElevatedButton(
-            child: Text("Request permissions"),
-            onPressed: () => perm.requestOrGoToSettings(required),
+      SafeArea(
+        child: Scaffold(
+          body: Center(
+            child: ElevatedButton(
+              child: Text("Request permissions"),
+              onPressed: () => perm.requestOrGoToSettings(required),
+            ),
           ),
         ),
       );
 
-  Widget _homePage(BuildContext context) => HomePage();
-
-  Widget _settingsPage(BuildContext context) => SettingsPage();
+  Widget _homePage(BuildContext context) => const SafeArea(child: HomePage());
 }
