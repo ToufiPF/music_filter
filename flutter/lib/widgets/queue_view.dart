@@ -79,38 +79,48 @@ class QueueView extends StatelessWidget {
     bool isSongPlaying,
   ) {
     final music = playlistQueue[musicIdx];
-    return ListTile(
-      dense: true,
-      selected: isSongPlaying,
-      title: Constants.scrollingText(music.title ?? music.filename),
-      subtitle: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Constants.scrollingText(music.artists ?? music.albumArtist ?? ''),
-          Constants.scrollingText(p.basename(music.virtualPath),
-              style: TextStyle(fontStyle: FontStyle.italic)),
-        ],
-      ),
-      isThreeLine: true,
-      leading:
-          Icon(isSongPlaying ? Icons.play_arrow : Icons.play_arrow_outlined),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          KeepStateWidget(music: music, iconSize: iconSize),
-        ],
-      ),
-      onTap: () {
-        // if song is currently playing, don't call play()
-        // as this would reset the time to 0
-        if (isSongPlaying && player.isPlaying) {
-          return;
-        }
+    return ReorderableDragStartListener(
+      index: musicIdx,
+      child: ListTile(
+        dense: true,
+        selected: isSongPlaying,
+        title: Constants.scrollingText(music.title ?? music.filename),
+        subtitle: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Constants.scrollingText(music.artists ?? music.albumArtist ?? ''),
+            Constants.scrollingText(p.basename(music.virtualPath),
+                style: TextStyle(fontStyle: FontStyle.italic)),
+          ],
+        ),
+        isThreeLine: true,
+        leading:
+            Icon(isSongPlaying ? Icons.play_arrow : Icons.play_arrow_outlined),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            KeepStateWidget(music: music, iconSize: iconSize),
+            IconButton(
+                icon: Icon(Icons.playlist_remove, size: iconSize),
+                onPressed: () async {
+                  final playlist =
+                      Provider.of<PlaylistService>(context, listen: false);
+                  await playlist.removeAt(musicIdx);
+                }),
+          ],
+        ),
+        onTap: () {
+          // if song is currently playing, don't call play()
+          // as this would reset the time to 0
+          if (isSongPlaying && player.isPlaying) {
+            return;
+          }
 
-        player.play(index: musicIdx);
-      },
+          player.play(index: musicIdx);
+        },
+      ),
     );
   }
 }

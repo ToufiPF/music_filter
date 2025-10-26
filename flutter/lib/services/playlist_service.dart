@@ -90,11 +90,14 @@ class PlaylistService {
       return;
     }
 
-    await _source.move(oldIndex, newIndex);
-
+    // if new index is after old index, need to subtract one b/c
+    // the item is removed first at oldIndex which shifts all next indices
     if (newIndex > oldIndex) {
       newIndex -= 1;
     }
+
+    // ConcatenatingAudioSource.move should be called with the rectified indices after tests
+    await _source.move(oldIndex, newIndex);
     final toInsert = _tracked.removeAt(oldIndex);
     _tracked.insert(newIndex, toInsert);
     _refreshController();
