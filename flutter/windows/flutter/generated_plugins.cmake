@@ -3,7 +3,7 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
-  flutter_audio_toolkit
+  flutter_media_metadata
   isar_flutter_libs
   permission_handler_windows
 )

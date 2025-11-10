@@ -45,7 +45,10 @@ dependencies:
   isar_flutter_libs: *isar_version        # contains Isar Core
   # isar: ^3.1.0
   # isar_flutter_libs: ^3.1.0
-  flutter_audio_toolkit: ^1.0.0
+  flutter_media_metadata:
+    git:
+      url: https://github.com/ToufiPF/flutter_media_metadata_3.git
+      ref: 4d8fb573e85517a79ea424e76930cba9224a8022
   audio_service: ^0.18.0
   just_audio: ^0.10.5                     # Audio player
   just_audio_platform_interface: ^4.2.0
