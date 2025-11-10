@@ -79,7 +79,7 @@ class QueueView extends StatelessWidget {
     bool isSongPlaying,
   ) {
     final music = playlistQueue[musicIdx];
-    return ReorderableDragStartListener(
+    return ReorderableDelayedDragStartListener(
       index: musicIdx,
       child: ListTile(
         dense: true,
