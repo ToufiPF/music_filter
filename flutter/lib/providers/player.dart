@@ -1,12 +1,6 @@
 import 'package:just_audio/just_audio.dart';
 
-import '../services/playlist_service.dart';
-
 mixin PlayerController {
-  /// Attaches a [PlayerQueueNotifier] to this [PlayerController]
-  /// Should be called at least once before calling other methods
-  Future<void> attachPlaylistController(PlaylistService controller);
-
   /// Plays the song at the given index,
   /// or just toggles playing state on the current music is index is null
   Future<void> play({int? index});
@@ -53,70 +47,62 @@ abstract class PlayerStateController
 class JustAudioPlayerController extends PlayerStateController {
   static const tag = "PlayerProvider";
 
-  late PlaylistService _playlistController;
-  final AudioPlayer _player = AudioPlayer();
+  final AudioPlayer player = AudioPlayer();
 
   // ===========================================================================
   // PlayerController
   @override
-  Future<void> attachPlaylistController(PlaylistService controller) async {
-    _playlistController = controller;
-    _player.setAudioSource(_playlistController.audioSource,
-        preload: true, initialIndex: 0, initialPosition: Duration.zero);
-  }
-
-  @override
   Future<void> play({int? index}) async {
     if (index != null) {
-      await _player.seek(Duration.zero, index: index);
+      await player.seek(Duration.zero, index: index);
     }
-    return await _player.play();
+    return await player.play();
   }
 
   @override
-  Future<void> pause() => _player.pause();
+  Future<void> pause() => player.pause();
 
   @override
-  Future<void> seekTo(Duration duration) => _player.seek(duration);
+  Future<void> seekTo(Duration duration) => player.seek(duration);
 
   @override
-  Future<void> previous() => _player.seekToPrevious();
+  Future<void> previous() => player.seekToPrevious();
 
   @override
-  Future<void> next() => _player.seekToNext();
+  Future<void> next() => player.seekToNext();
 
   // ===========================================================================
   // PlayerState
   @override
-  int? get indexInPlaylist => _player.currentIndex;
+  int? get indexInPlaylist => player.currentIndex;
 
   @override
-  bool get isPlaying => _player.playing;
+  bool get isPlaying => player.playing;
 
   @override
-  Duration get playerPosition => _player.position;
+  Duration get playerPosition => player.position;
 
   @override
-  Duration get playerBufferedPosition => _player.bufferedPosition;
+  Duration get playerBufferedPosition => player.bufferedPosition;
 
   @override
-  Duration? get currentMusicDuration => _player.duration;
+  Duration? get currentMusicDuration => player.duration;
 
   // ===========================================================================
   // PlayerStateObserver
   @override
-  Stream<int?> get indexInPlaylistStream => _player.currentIndexStream;
+  Stream<int?> get indexInPlaylistStream => player.currentIndexStream;
 
   @override
-  Stream<bool> get isPlayingStream => _player.playingStream;
+  Stream<bool> get isPlayingStream => player.playingStream;
 
   @override
-  Stream<Duration> get playerPositionStream => _player.positionStream;
+  Stream<Duration> get playerPositionStream => player.positionStream;
 
   @override
   Stream<Duration> get playerBufferedPositionStream =>
-      _player.bufferedPositionStream;
+      player.bufferedPositionStream;
 
   @override
-  Stream<Duration?> get currentMusicDurationStream => _player.durationStream;
+  Stream<Duration?> get currentMusicDurationStream => player.durationStream;
 }

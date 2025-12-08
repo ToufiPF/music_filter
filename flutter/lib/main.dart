@@ -54,8 +54,8 @@ Future<void> main() async {
   );
 
   final packageInfo = await PackageInfo.fromPlatform();
-  final PlayerStateController player = JustAudioPlayerController();
-  player.attachPlaylistController(playlist);
+  final player = JustAudioPlayerController();
+  await playlist.attachPlayer(player.player);
 
   runApp(MultiProvider(
     providers: [
@@ -68,7 +68,7 @@ Future<void> main() async {
       ChangeNotifierProvider.value(value: permissions),
       ChangeNotifierProvider.value(value: rootFolder),
       Provider.value(value: playlist),
-      Provider.value(value: player),
+      Provider<PlayerStateController>.value(value: player),
       Provider.value(value: musicStore),
     ],
     child: PrefService(

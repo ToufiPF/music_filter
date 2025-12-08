@@ -10,21 +10,30 @@ import '../notification.dart';
 class PlaylistService {
   static const String tag = "PlaylistService";
 
-  final ConcatenatingAudioSource _source =
-      ConcatenatingAudioSource(children: []);
   int _idxCounter = 1;
 
   // MusicFolderDto? tracked;
   // final trackedController = StreamController<MusicFolderDto?>();
   List<Music> _tracked = [];
-  final _trackedController = BehaviorSubject<List<Music>>();
+  final _trackedController = BehaviorSubject<List<Music>>(sync: true);
+  AudioPlayer? _player;
 
-  AudioSource get audioSource => _source;
+  Future<void> attachPlayer(AudioPlayer player) async {
+    _player = player;
+    await player.setAudioSources(audioSources,
+        preload: true, initialIndex: 0, initialPosition: Duration.zero);
+  }
+
+  List<AudioSource> get audioSources =>
+      _trackedController.valueOrNull
+          ?.map(_musicToSource)
+          .toList(growable: false) ??
+      [];
 
   Future<void> clear() async {
     _tracked = [];
-    await _source.clear();
     _refreshController();
+    await _player?.clearAudioSources();
   }
 
   List<Music> currentPlaylist() {
@@ -38,14 +47,14 @@ class PlaylistService {
 
   Future<void> insertAt(int index, Music music) async {
     _tracked.insert(index, music);
-    await _source.insert(index, _musicToSource(music));
     _refreshController();
+    await _player?.insertAudioSource(index, _musicToSource(music));
   }
 
   Future<void> removeAt(int index) async {
     _tracked.removeAt(index);
-    await _source.removeAt(index);
     _refreshController();
+    await _player?.removeAudioSourceAt(index);
   }
 
   Future<void> appendAll(Iterable<Music> musics) async {
@@ -53,8 +62,8 @@ class PlaylistService {
     for (var m in musics) {
       _tracked.add(m);
     }
-    await _source
-        .addAll(musics.map((m) => _musicToSource(m)).toList(growable: false));
+    await _player
+        ?.addAudioSources(musics.map(_musicToSource).toList(growable: false));
     _refreshController();
   }
 
@@ -63,7 +72,7 @@ class PlaylistService {
       int i;
       while ((i = _tracked.indexOf(m)) >= 0) {
         _tracked.removeAt(i);
-        await _source.removeAt(i);
+        await _player?.removeAudioSourceAt(i);
       }
     }
 
@@ -96,11 +105,10 @@ class PlaylistService {
       newIndex -= 1;
     }
 
-    // ConcatenatingAudioSource.move should be called with the rectified indices after tests
-    await _source.move(oldIndex, newIndex);
     final toInsert = _tracked.removeAt(oldIndex);
     _tracked.insert(newIndex, toInsert);
     _refreshController();
+    await _player?.moveAudioSource(oldIndex, newIndex);
   }
 
   void _refreshController() {

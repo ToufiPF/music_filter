@@ -45,7 +45,7 @@ class QueueView extends StatelessWidget {
         final musics = snapshot.requireData;
         return musics.isEmpty
             ? Center(
-                child: Text("Nothing to play !\n"
+                child: const Text("Nothing to play !\n"
                     "Start by adding some songs to the queue"))
             : ReorderableListView.builder(
                 physics: NeverScrollableScrollPhysics(),
@@ -56,7 +56,7 @@ class QueueView extends StatelessWidget {
                 onReorder: playlist.reorder,
                 // Trigger rebuild only if currently played index goes to != to == or vice-versa
                 itemBuilder: (context, musicIdx) => StreamBuilder<bool>(
-                    key: Key(musicIdx.toString()),
+                    key: ValueKey(musicIdx),
                     initialData: player.indexInPlaylist == musicIdx,
                     stream: player.indexInPlaylistStream
                         .map((currentIdx) => currentIdx == musicIdx),
@@ -91,7 +91,7 @@ class QueueView extends StatelessWidget {
           children: [
             Constants.scrollingText(music.artists ?? music.albumArtist ?? ''),
             Constants.scrollingText(p.basename(music.virtualPath),
-                style: TextStyle(fontStyle: FontStyle.italic)),
+                style: const TextStyle(fontStyle: FontStyle.italic)),
           ],
         ),
         isThreeLine: true,
@@ -103,7 +103,7 @@ class QueueView extends StatelessWidget {
           children: [
             KeepStateWidget(music: music, iconSize: iconSize),
             IconButton(
-                icon: Icon(Icons.playlist_remove, size: iconSize),
+                icon: const Icon(Icons.playlist_remove, size: iconSize),
                 onPressed: () async {
                   final playlist =
                       Provider.of<PlaylistService>(context, listen: false);
