@@ -67,7 +67,7 @@ class PlaylistService {
     _refreshController();
   }
 
-  Future<void> removeAll(Iterable<Music> musics) async {
+  Future<void> removeAll(List<Music> musics) async {
     for (var m in musics) {
       int i;
       while ((i = _tracked.indexOf(m)) >= 0) {
@@ -80,17 +80,7 @@ class PlaylistService {
   }
 
   Future<void> removeTreatedMusics() async {
-    // for (var i = _tracked.length; i >= 0; --i) {
-    //   if (_tracked[i].state != KeepState.unspecified) {
-    //     _tracked.removeAt(i);
-    //     await _source.removeAt(i);
-    //   }
-    // }
-    // _tracked.removeWhere((m) => m.state != KeepState.unspecified);
-    // await _source.clear();
-    // await _source.addAll(_tracked.map(_musicToSource).toList(growable: false));
-    // _refreshController();
-    final toRemove = _tracked.where((m) => m.state != KeepState.unspecified);
+    final toRemove = _tracked.where((m) => m.state != KeepState.unspecified).toList(growable: false);
     await removeAll(toRemove);
   }
 
