@@ -126,6 +126,7 @@ class FileView extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
+            IconActions.addNonTreatedInFolderToPlaylist(context, folder),
             IconActions.addFolderToPlaylist(context, folder),
           ]);
 

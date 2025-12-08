@@ -14,9 +14,20 @@ class IconActions {
     final playlist = Provider.of<PlaylistService>(context, listen: false);
 
     return IconButton(
-        icon: Icon(Icons.playlist_add),
+        icon: const Icon(Icons.playlist_add),
         onPressed: () async {
           await playlist.appendAll(folder.allDescendants);
+        });
+  }
+
+  static Widget addNonTreatedInFolderToPlaylist(
+      BuildContext context, MusicFolder folder) {
+    final playlist = Provider.of<PlaylistService>(context, listen: false);
+
+    return IconButton(
+        icon: const Icon(Icons.playlist_add_check),
+        onPressed: () async {
+          await playlist.appendAll(folder.allDescendants.where((m) => m.state == KeepState.unspecified));
         });
   }
 

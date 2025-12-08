@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'player/export_button.dart';
 import 'player/info.dart';
 import 'player/media.dart';
+import 'player/remove_treated_musics.dart';
 import 'player/seekbar.dart';
 import 'player/state.dart';
 
@@ -22,6 +23,8 @@ class PlayerWidget extends StatelessWidget {
               children: [
                 ExportButtonWidget(iconSize: actionIconsSize),
                 Expanded(child: MediaButtonsWidget(iconSize: mediaIconsSize)),
+                RemoveTreatedMusicsFromPlaylistButton(
+                    iconSize: actionIconsSize),
                 CurrentlyPlayingKeepStateWidget(iconSize: actionIconsSize),
               ],
             ),
