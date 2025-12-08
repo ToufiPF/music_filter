@@ -15,7 +15,7 @@ class MusicFolder {
   }
 
   static MusicFolder lookupOrCreate(MusicFolder parent, String prefix, List<String> splits, int depth) {
-    if (depth >= splits.length) {
+    if (depth >= splits.length || (depth + 1 == splits.length && splits[depth] == ".")) {
       return parent;
     }
 
