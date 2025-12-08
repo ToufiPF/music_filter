@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/services.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:isar/isar.dart';
@@ -43,10 +44,9 @@ Future<void> main() async {
   final musicStore = MusicStoreService(isar);
 
   final rootFolder = RootFolderNotifier(
-    prefService: prefService,
-    prefName: Pref.rootFolder.name,
-    store: musicStore
-  );
+      prefService: prefService,
+      prefName: Pref.rootFolder.name,
+      store: musicStore);
 
   await NotifHandler.init(
     queue: playlist,
@@ -96,14 +96,7 @@ class MyApp extends StatelessWidget {
           routes: {
             '/initial': _initialPage,
             '/home': _homePage,
-            '/licenses': (_) => SafeArea(
-              child: LicensePage(
-                    applicationName: title,
-                    applicationVersion: version,
-                    applicationIcon: null,
-                    applicationLegalese: null,
-                  ),
-            ),
+            '/licenses': _licensePage,
           });
 
   Widget _initialPage(BuildContext context) {
@@ -119,16 +112,37 @@ class MyApp extends StatelessWidget {
 
   Widget _requestPermissions(BuildContext context, PermissionsNotifier perm,
           List<PermissionGroup> required) =>
-      SafeArea(
-        child: Scaffold(
-          body: Center(
-            child: ElevatedButton(
-              child: Text("Request permissions"),
-              onPressed: () => perm.requestOrGoToSettings(required),
+      _withUiOverlayTheme(
+          context,
+          SafeArea(
+            child: Scaffold(
+              body: Center(
+                child: ElevatedButton(
+                  child: Text("Request permissions"),
+                  onPressed: () => perm.requestOrGoToSettings(required),
+                ),
+              ),
             ),
-          ),
-        ),
-      );
+          ));
 
-  Widget _homePage(BuildContext context) => const SafeArea(child: HomePage());
+  Widget _homePage(BuildContext context) =>
+      _withUiOverlayTheme(context, const SafeArea(child: HomePage()));
+
+  Widget _licensePage(BuildContext context) => _withUiOverlayTheme(
+      context,
+      SafeArea(
+        child: LicensePage(
+          applicationName: title,
+          applicationVersion: version,
+          applicationIcon: null,
+          applicationLegalese: null,
+        ),
+      ));
+
+  Widget _withUiOverlayTheme(BuildContext context, Widget child) =>
+      AnnotatedRegion<SystemUiOverlayStyle>(
+        value: SystemUiOverlayStyle.light
+            .copyWith(statusBarColor: Theme.of(context).primaryColor),
+        child: child,
+      );
 }
