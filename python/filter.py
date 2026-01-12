@@ -8,6 +8,7 @@ import shutil
 from pathlib import Path
 from enum import StrEnum, auto
 
+logging.basicConfig(level=logging.DEBUG, format='[%(asctime)s] [%(levelname)s] - %(message)s')
 
 class State(StrEnum):
     unspecified = auto()
@@ -50,12 +51,38 @@ def prompt_for_proceed(prompt: str) -> bool:
         elif res in ('n', 'no', 'non'):
             return False
         else:
-            print(f'Invalid response {res}.')
+            logging.warn(f'Invalid response {res}.')
+
+
+def save_music(src_dir: 'Path', dst_dir: 'Path', music: 'str'):
+    path = src_dir / music
+    dest = dst_dir / music
+
+    if path.exists():
+        path.chmod(stat.S_IWRITE)
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy(path, dest)
+        delete_music(src_dir, music)
+        return True
+    else:
+        logging.error('File at %s does not exist - could not be saved', path)
+        return False
+
+
+def delete_music(src_dir: 'Path', music: 'str'):
+    p = src_dir / music
+    p.unlink(missing_ok=True)
+    try:
+        p = p.parent
+        while p != src_dir and p.exists() and is_empty(p):
+            p.chmod(stat.S_IWRITE)
+            shutil.rmtree(p, onerror=on_rmtree_error)
+            p = p.parent
+    except Exception as e:
+        logging.error(f'Could not remove empty folder {p} : {e}')
 
 
 def run_directives(src_dir: 'Path', dst_dir: 'Path', directives: 'dict[str, State]', default_state: 'State | None'):
-    copied = 0
-
     sorted: 'dict[State, set[str]]' = {
         State.kept: set(),
         State.deleted: set(),
@@ -63,54 +90,35 @@ def run_directives(src_dir: 'Path', dst_dir: 'Path', directives: 'dict[str, Stat
     }
 
     for relative, directive in directives.items():
-        if directive == State.unspecified:
-            if default_state is None:
-                delete = prompt_for_proceed('Delete undecided musics?')
-                default_state = State.deleted if delete else State.kept
-            action = default_state
-        else:
-            action = directive
-
         sorted[directive].add(relative)
 
-        path = src_dir / relative
-        dest = dst_dir / relative
-
-        if path.exists():
-            path.chmod(stat.S_IWRITE)
-
-            if action == State.kept:
-                copied += 1
-                dest.parent.mkdir(parents=True, exist_ok=True)
-                shutil.copy(path, dest)
-        else:
-            logging.error('File at %s does not exist', path)
-
-    logging.info('%s out of %s copied', copied, len(directives))
+    kept = sorted[State.kept]
     dropped = sorted[State.deleted]
-    if default_state == State.deleted:
-        dropped |= sorted[State.unspecified]
+    if sorted[State.unspecified]:
+        logging.info('The following musics have a undecided state :')
+        for m in sorted[State.unspecified]:
+            logging.info(f' - {m}')
+        if prompt_for_proceed('Delete undecided musics?'):
+            dropped |= sorted[State.unspecified]
+
+    logging.info('%s out of %s will be saved in destination folder', len(kept), len(directives))
+    logging.info('%s out of %s will be deleted', len(dropped), len(directives))
+    logging.info('%s out of %s will be kept in source folder', len(directives) - len(kept) - len(dropped), len(directives))
+
+    for m in kept:
+        save_music(src_dir, dst_dir, m)
 
     if dropped:
-        print('The following files will be deleted:')
-        for p in dropped:
-            print(f"- {p}")
+        logging.info('The following files will be deleted:')
+        for m in dropped:
+            logging.info(f"- {m}")
 
         proceed = prompt_for_proceed('Continue?')
         if proceed:
-            for relative in directives.keys():
-                p = src_dir / relative
-                p.unlink(missing_ok=True)
-                try:
-                    p = p.parent
-                    while p != src_dir and p.exists() and is_empty(p):
-                        p.chmod(stat.S_IWRITE)
-                        shutil.rmtree(p, onerror=on_rmtree_error)
-                        p = p.parent
-                except Exception as e:
-                    logging.error(f'Could not remove empty folder {p} : {e}')
+            for m in dropped:
+                delete_music(src_dir, m)
         else:
-            print('Original musics were kept as well')
+            logging.info('Musics marked as deleted were kept in source folder')
 
 
 def setup_parser() -> 'ap.ArgumentParser':
@@ -137,8 +145,10 @@ if __name__ == '__main__':
     parser = setup_parser()
     args = parser.parse_args()
 
+    logging.debug('Reading directing files...')
     directives = read_directives(args.directives_path)
 
+    logging.debug('Executing directives...')
     run_directives(args.src_dir, args.dst_dir, directives,
                    default_state=args.default_state)
 
