@@ -11,6 +11,7 @@ import '../data/entities/music.dart';
 import '../data/enums/state.dart';
 import '../data/models/music_folder.dart';
 import '../util/misc.dart';
+import '../util/pipelined_future.dart';
 
 class MusicStoreService {
   static const String tag = "MusicStoreService";
@@ -126,15 +127,13 @@ class MusicStoreService {
   /// Scans the given folder and populates the DB with the scanned musics
   Future<void> scanFolder(Directory root) async {
     debugPrint("[$tag]: Rescanning $root...");
-    final scanned = <Music>[];
-    await _scan(scanned, '', root);
+    final scanned = await _scan(root);
     debugPrint("[$tag]: Scanned ${scanned.length} musics.");
 
     var added = 0;
     await db.writeTxn(() async {
-      final existing = {
-        for (var m in await musics.where().findAll()) m.physicalPath
-      };
+      final existing =
+          (await musics.where().physicalPathProperty().findAll()).toSet();
 
       for (var m in scanned) {
         if (existing.add(m.physicalPath)) {
@@ -153,39 +152,30 @@ class MusicStoreService {
     _stream.add(newState);
   }
 
-  Future<void> _scan(
-    List<Music> scanned,
-    String basePath,
-    Directory folder,
-  ) async {
-    final futures = <Future<void>>[];
+  Future<List<Music>> _scan(Directory folder) async {
+    final futures = <Future<Music?> Function()>[];
 
-    await for (var e in folder.list(recursive: false, followLinks: false)) {
-      final name = p.basename(e.path);
-      final path = p.join(basePath, name);
-      if (e is Directory) {
-        futures.add(_scan(scanned, path, e));
-      } else if (e is File) {
-        futures.add(_fetchTags(e, path).then((music) {
-          if (music != null) {
-            scanned.add(music);
-          } else {
-            debugPrint("[$tag]: Failed to scan metadata of $path.");
-          }
-        }));
+    await for (var e in folder.list(recursive: true, followLinks: false)) {
+      if (e is File) {
+        final virtualPath = p.relative(e.path, from: folder.path);
+        futures.add(() => _fetchTags(e, virtualPath));
       }
     }
 
-    await Future.wait(futures);
+    var scanned = await PipelinedFuture(4, futures).waitAll();
+    return scanned
+        .where((m) => m != null)
+        .cast<Music>()
+        .toList(growable: false);
   }
 
-  Future<Music?> _fetchTags(File file, String path) async {
+  Future<Music?> _fetchTags(File file, String virtualPath) async {
     try {
       final metadata =
-          await MetadataRetriever.fromFile(file).timeout(Duration(seconds: 50));
+          await MetadataRetriever.fromFile(file).timeout(Duration(seconds: 10));
       return Music(
         physicalPath: file.path,
-        virtualPath: path,
+        virtualPath: virtualPath,
         title: metadata.trackName,
         artists: (metadata.trackArtistNames?.map((e) => e.toString()) ?? [])
             .join('; '),
