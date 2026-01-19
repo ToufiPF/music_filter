@@ -27,7 +27,9 @@ class MusicStoreService {
 
   /// Empties out the entire Music table
   Future<void> clear() async {
-    await musics.where().deleteAll();
+    await db.writeTxn(() async {
+      await musics.where().deleteAll();
+    });
     _stream.add(null);
   }
 
