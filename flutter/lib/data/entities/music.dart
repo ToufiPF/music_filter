@@ -59,7 +59,8 @@ class Music implements Comparable<Music> {
   String get parentPath => File(virtualPath).parent.path;
 
   @override
-  bool operator ==(Object other) => other is Music && physicalPath == other.physicalPath;
+  bool operator ==(Object other) =>
+      other is Music && physicalPath == other.physicalPath;
 
   @override
   @ignore

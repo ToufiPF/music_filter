@@ -121,8 +121,7 @@ class FileView extends StatelessWidget {
         });
   }
 
-  Widget _trailingFolderWidget(BuildContext context, MusicFolder folder) =>
-      Row(
+  Widget _trailingFolderWidget(BuildContext context, MusicFolder folder) => Row(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [

@@ -6,7 +6,8 @@ import '../../services/playlist_service.dart';
 class RemoveTreatedMusicsFromPlaylistButton extends StatelessWidget {
   final double iconSize;
 
-  const RemoveTreatedMusicsFromPlaylistButton({super.key, required this.iconSize});
+  const RemoveTreatedMusicsFromPlaylistButton(
+      {super.key, required this.iconSize});
 
   @override
   Widget build(BuildContext context) => IconButton(
