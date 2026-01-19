@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:collection/collection.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:rxdart/rxdart.dart';
 
@@ -12,8 +13,6 @@ class PlaylistService {
 
   int _idxCounter = 1;
 
-  // MusicFolderDto? tracked;
-  // final trackedController = StreamController<MusicFolderDto?>();
   List<Music> _tracked = [];
   final _trackedController = BehaviorSubject<List<Music>>(sync: true);
   AudioPlayer? _player;
@@ -41,7 +40,6 @@ class PlaylistService {
   }
 
   Stream<List<Music>> playlist() {
-    // return trackedController.stream.map((folder) => folder?.allDescendants ?? []);
     return _trackedController.stream;
   }
 
@@ -58,7 +56,6 @@ class PlaylistService {
   }
 
   Future<void> appendAll(Iterable<Music> musics) async {
-    // MusicFolderDto.lookupOrCreate(tracked, prefix, splits, 0);
     for (var m in musics) {
       _tracked.add(m);
     }
@@ -81,9 +78,19 @@ class PlaylistService {
 
   Future<void> removeTreatedMusics() async {
     final toRemove = _tracked
-        .where((m) => m.state != KeepState.unspecified)
+        .mapIndexed((idx, m) => (idx, m))
+        .where((pair) => pair.$2.state != KeepState.unspecified)
+        .map((pair) => pair.$1)
+        .where((idx) => idx != _player?.currentIndex)
+        .sortedBy<num>((idx) => -idx)
         .toList(growable: false);
-    await removeAll(toRemove);
+    // remove highest indices first to avoid problems with shifting indices
+    for (var index in toRemove) {
+      _tracked.removeAt(index);
+      await _player?.removeAudioSourceAt(index);
+    }
+
+    _refreshController();
   }
 
   Future<void> reorder(int oldIndex, int newIndex) async {
