@@ -9,8 +9,7 @@ import '../services/playlist_service.dart';
 import '../util/toast_helper.dart';
 
 class IconActions {
-  static Widget addFolderToPlaylist(
-      BuildContext context, MusicFolder folder) {
+  static Widget addFolderToPlaylist(BuildContext context, MusicFolder folder) {
     final playlist = Provider.of<PlaylistService>(context, listen: false);
 
     return IconButton(
@@ -27,25 +26,23 @@ class IconActions {
     return IconButton(
         icon: const Icon(Icons.playlist_add_check),
         onPressed: () async {
-          await playlist.appendAll(folder.allDescendants.where((m) => m.state == KeepState.unspecified));
+          await playlist.appendAll(folder.allDescendants
+              .where((m) => m.state == KeepState.unspecified));
         });
   }
 
-  static Widget toggleNextState(
-    KeepState targetState,
-    BuildContext context,
-    Music? music,
-    KeepState currentState,
-    { double? iconSize }
-  ) {
+  static Widget toggleNextState(KeepState targetState, BuildContext context,
+      Music? music, KeepState currentState,
+      {double? iconSize}) {
     return currentState != targetState
         ? _markAsAction(targetState, context, music, iconSize: iconSize)
-        : _markAsAction(KeepState.unspecified, context, music, iconSize: iconSize);
+        : _markAsAction(KeepState.unspecified, context, music,
+            iconSize: iconSize);
   }
 
   static Widget _markAsAction(
-      KeepState state, BuildContext context, Music? music, 
-    { double? iconSize }) {
+      KeepState state, BuildContext context, Music? music,
+      {double? iconSize}) {
     final store = Provider.of<MusicStoreService>(context, listen: false);
     return IconButton(
         icon: Icon(state.icon, size: iconSize),

@@ -80,7 +80,9 @@ class PlaylistService {
   }
 
   Future<void> removeTreatedMusics() async {
-    final toRemove = _tracked.where((m) => m.state != KeepState.unspecified).toList(growable: false);
+    final toRemove = _tracked
+        .where((m) => m.state != KeepState.unspecified)
+        .toList(growable: false);
     await removeAll(toRemove);
   }
 

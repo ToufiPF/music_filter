@@ -14,21 +14,21 @@ class MusicFolder {
     return root;
   }
 
-  static MusicFolder lookupOrCreate(MusicFolder parent, String prefix, List<String> splits, int depth) {
-    if (depth >= splits.length || (depth + 1 == splits.length && splits[depth] == ".")) {
+  static MusicFolder lookupOrCreate(
+      MusicFolder parent, String prefix, List<String> splits, int depth) {
+    if (depth >= splits.length ||
+        (depth + 1 == splits.length && splits[depth] == ".")) {
       return parent;
     }
 
     final key = splits[depth];
     prefix = p.join(prefix, key);
-    final child = parent.children.putIfAbsent(key, () => MusicFolder(path: prefix, parent: parent));
+    final child = parent.children
+        .putIfAbsent(key, () => MusicFolder(path: prefix, parent: parent));
     return lookupOrCreate(child, prefix, splits, depth + 1);
   }
 
-  MusicFolder({
-    required this.path,
-    this.parent
-  });
+  MusicFolder({required this.path, this.parent});
 
   /// Path of the folder, **relative to** the root
   final String path;
