@@ -31,7 +31,7 @@ def read_directives(path: 'Path') -> 'dict[str, State]':
 def is_empty(path: 'Path') -> bool:
     """ Returns whether the given path is a directory containing only non-music files (e.g. album covers). """
     assert path.is_dir(), f"Called is_empty() on {path} which is not a directory"
-    music_extensions = set(('.mp3', '.flac', '.wav', '.ogg'))
+    music_extensions = set(('.mp3', '.flac', '.wav', '.ogg', '.m4a'))
 
     return all(f.is_file() and not f.suffix.lower() in music_extensions for f in path.iterdir())
 
