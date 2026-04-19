@@ -25,7 +25,7 @@ class RootFolderNotifier extends NullablePrefNotifier<String> {
       rootFolder != null ? File(p.join(rootFolder!.path, 'export.csv')) : null;
 
   Future<bool> pickFolder(Directory? initialDir) async {
-    String? picked = await FilePicker.platform.getDirectoryPath(
+    String? picked = await FilePicker.getDirectoryPath(
       dialogTitle: "Chose a folder",
       lockParentWindow: true,
       initialDirectory: initialDir?.path,

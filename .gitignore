@@ -9,3 +9,4 @@
 .history
 .svn/
 migrate_working_dir/
+flutter/android/.kotlin

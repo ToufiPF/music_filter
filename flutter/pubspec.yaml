@@ -39,7 +39,7 @@ dependencies:
   path: ^1.8.3                  # Path manipulation (e.g. os.path.join like)
   path_provider: ^2.0.15        # Paths for storage
   package_info_plus: ^9.0.0
-  file_picker: ^10.3.3           # File/Folder picker
+  file_picker: ^11.0.2           # File/Folder picker
   device_info_plus: ^12.2.0      # OS version code
   isar: *isar_version           # Local NoSQL DB
   isar_flutter_libs: *isar_version        # contains Isar Core
